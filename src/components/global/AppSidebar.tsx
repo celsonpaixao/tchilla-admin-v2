@@ -333,14 +333,14 @@ export function AppSidebar({ user }: { user: UsuarioInterface | null }) {
         <SidebarContent {...props} />
       </aside>
 
-      {/* Mobile toggle */}
+      {/* Mobile toggle — display gerido pelo Tailwind (lg:hidden), sem display inline */}
       <button
-        className="lg:hidden"
+        className="lg:hidden fixed flex items-center justify-center"
         style={{
-          position: "fixed", top: 14, left: 14, zIndex: 50,
+          top: 14, left: 14, zIndex: 50,
           padding: 8, borderRadius: "var(--r-md)",
           background: "var(--navy)", color: "white",
-          border: "none", cursor: "pointer", display: "grid", placeItems: "center",
+          border: "none", cursor: "pointer",
         }}
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Menu"
