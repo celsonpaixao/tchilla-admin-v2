@@ -123,20 +123,28 @@ export function CampanhasPage({ clientes }: CampanhasPageProps) {
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium" style={{ color: "var(--text-2)" }}>Mensagem</label>
-              <span className="text-xs" style={{ color: "var(--text-3)" }}>{mensagem.length}/200</span>
+              <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)" }}>Mensagem</label>
+              <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{mensagem.length}/200</span>
             </div>
             <textarea
               value={mensagem}
               onChange={(e) => setMensagem(e.target.value.slice(0, 200))}
               placeholder="Ex: Confira nossas ofertas exclusivas com até 30% de desconto!"
               rows={4}
-              className="w-full text-sm px-3.5 py-2.5 rounded-lg border outline-none resize-none transition-all"
-              style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
-              onFocus={(e) => (e.target.style.borderColor = "var(--blue)")}
-              onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
+              style={{
+                width: "100%", padding: "8px var(--pad-x)",
+                background: "var(--surface)", color: "var(--text)",
+                border: "1px solid var(--border-strong)", borderRadius: "var(--r-md)",
+                fontFamily: "inherit", fontSize: "var(--font-ui)",
+                outline: "none", resize: "none",
+                transition: "border-color .12s, box-shadow .12s",
+              }}
+              onFocus={(e) => { e.target.style.borderColor = "var(--blue)"; e.target.style.boxShadow = "0 0 0 3px var(--ring)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "none"; }}
+              onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--gray-400)"; }}
+              onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--border-strong)"; }}
             />
           </div>
 

@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   },
   description: "Painel administrativo interno da Tchilla",
   robots: { index: false, follow: false },
+  icons: {
+    icon:  "/admin_favicon.png",
+    apple: "/admin_favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

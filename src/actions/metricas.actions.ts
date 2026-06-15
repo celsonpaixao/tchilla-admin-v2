@@ -17,10 +17,10 @@ export async function fetchMetricasUsuarios(
   ano: number
 ): Promise<ActionResult<UserMetrics>> {
   try {
-    const data = await serverFetch<ApiResponse<UserMetrics>>("/api/Metricas/usuarios", {
+    const data = await serverFetch<UserMetrics>("/api/Metricas/usuarios", {
       params: { mes, ano },
     });
-    return { success: true, data: data.data };
+    return { success: true, data };
   } catch (err: unknown) {
     return { success: false, error: String(err) };
   }
@@ -28,11 +28,11 @@ export async function fetchMetricasUsuarios(
 
 export async function fetchUserVsParceiros(ano: number): Promise<ActionResult<UserChartData>> {
   try {
-    const data = await serverFetch<ApiResponse<UserChartData>>(
+    const data = await serverFetch<UserChartData>(
       "/api/Metricas/usuarios-vs-parceiros/por-mes",
       { params: { ano } }
     );
-    return { success: true, data: data.data };
+    return { success: true, data };
   } catch (err: unknown) {
     return { success: false, error: String(err) };
   }

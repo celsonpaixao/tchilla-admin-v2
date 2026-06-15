@@ -240,16 +240,24 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
       >
         <div className="space-y-4">
           <GlobalInput id="cat-nome" label="Nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Espaços de Eventos" />
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium" style={{ color: "var(--text-2)" }}>Descrição</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)" }}>Descrição</label>
             <textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               rows={3}
-              className="w-full text-sm rounded-lg px-3.5 py-2.5 border outline-none resize-none transition-all"
-              style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
-              onFocus={(e) => (e.target.style.borderColor = "var(--blue)")}
-              onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
+              style={{
+                width: "100%", padding: "8px var(--pad-x)",
+                background: "var(--surface)", color: "var(--text)",
+                border: "1px solid var(--border-strong)", borderRadius: "var(--r-md)",
+                fontFamily: "inherit", fontSize: "var(--font-ui)",
+                outline: "none", resize: "none",
+                transition: "border-color .12s, box-shadow .12s",
+              }}
+              onFocus={(e) => { e.target.style.borderColor = "var(--blue)"; e.target.style.boxShadow = "0 0 0 3px var(--ring)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "none"; }}
+              onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--gray-400)"; }}
+              onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--border-strong)"; }}
             />
           </div>
           {!editTarget && (
@@ -281,14 +289,24 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
       >
         <div className="space-y-4">
           <GlobalInput id="sub-nome" label="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium" style={{ color: "var(--text-2)" }}>Descrição</label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)" }}>Descrição</label>
             <textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               rows={2}
-              className="w-full text-sm rounded-lg px-3.5 py-2.5 border outline-none resize-none"
-              style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
+              style={{
+                width: "100%", padding: "8px var(--pad-x)",
+                background: "var(--surface)", color: "var(--text)",
+                border: "1px solid var(--border-strong)", borderRadius: "var(--r-md)",
+                fontFamily: "inherit", fontSize: "var(--font-ui)",
+                outline: "none", resize: "none",
+                transition: "border-color .12s, box-shadow .12s",
+              }}
+              onFocus={(e) => { e.target.style.borderColor = "var(--blue)"; e.target.style.boxShadow = "0 0 0 3px var(--ring)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "none"; }}
+              onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--gray-400)"; }}
+              onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--border-strong)"; }}
             />
           </div>
           <div className="space-y-1.5">

@@ -11,6 +11,7 @@ import { GlobalDrawer } from "@/components/global/GlobalDrawer";
 import { ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { PageShell } from "@/components/global/PageShell";
+import { GlobalSelect } from "@/components/global/GlobalSelect";
 import { formatCurrencyAOA, formatDate, cn } from "@/lib/utils";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -119,22 +120,18 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
       subtitle={`${filtered.length} reservas`}
       actions={
         <>
-          <select
+          <GlobalSelect
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as ReservaStatus | "")}
-            style={{
-              height: "var(--control-h)", padding: "0 var(--pad-x)",
-              borderRadius: "var(--r-md)", border: "1px solid var(--border)",
-              background: "var(--surface)", color: "var(--text)",
-              fontSize: "var(--font-sm)", outline: "none", cursor: "pointer",
-            }}
+            style={{ width: 150 }}
+            aria-label="Filtrar por status"
           >
             <option value="">Todos os status</option>
             <option value="Pendente">Pendente</option>
             <option value="Confirmado">Confirmado</option>
             <option value="Cancelado">Cancelado</option>
             <option value="Concluido">Concluído</option>
-          </select>
+          </GlobalSelect>
 
           <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
             {([["table", Table], ["cards", LayoutGrid]] as const).map(([mode, Icon]) => (
