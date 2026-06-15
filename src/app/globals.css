@@ -1,0 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700;800&family=Sora:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   TCHILLA ADMIN — DESIGN SYSTEM TOKENS
+   Fonte: docs/Tchilla Admin Design System (download).html
+   ============================================================ */
+
+:root {
+  /* ─── Tipografia ─────────────────────────────────────────── */
+  --text-font: 'Hanken Grotesk', system-ui, sans-serif;
+  --display:   'Sora', system-ui, sans-serif;
+  --mono:      'Space Mono', ui-monospace, monospace;
+  --font-ui:   14px;
+  --font-sm:   13px;
+
+  /* ─── Marca — Azul ──────────────────────────────────────── */
+  --blue:     #14AAE9;
+  --blue-50:  #E8F7FE;
+  --blue-100: #C2EBFB;
+  --blue-200: #8FD9F7;
+  --blue-600: #0E8FCB;
+  --blue-700: #0A6F9E;
+  --blue-800: #0A567A;
+
+  /* ─── Marca — Navy ──────────────────────────────────────── */
+  --navy:     #0E2A42;
+  --navy-700: #1C3A52;
+  --navy-800: #122B40;
+  --navy-900: #0A2030;
+
+  /* ─── Marca — Pink ──────────────────────────────────────── */
+  --pink:     #FF4D8D;
+  --pink-50:  #FFF1F6;
+  --pink-100: #FFE3EC;
+  --pink-200: #FFC6D9;
+  --pink-400: #FF6FA0;
+  --pink-600: #ED2F74;
+  --pink-700: #C81E5E;
+  --pink-800: #A41A4F;
+
+  /* ─── Cinzas quentes ────────────────────────────────────── */
+  --gray-25:  #FBFAF9;
+  --gray-50:  #F6F5F3;
+  --gray-100: #EFEDEA;
+  --gray-150: #E9E6E2;
+  --gray-200: #E2DFDA;
+  --gray-300: #D2CEC8;
+  --gray-400: #ABA69E;
+  --gray-500: #827D75;
+  --gray-600: #615C55;
+  --gray-700: #47433D;
+  --gray-800: #2F2C27;
+  --gray-900: #1C1A17;
+
+  /* ─── Semânticos de superfície ──────────────────────────── */
+  --bg:        var(--gray-50);
+  --surface:   #FFFFFF;
+  --surface-2: var(--gray-25);
+  --surface-3: var(--gray-100);
+  --border:        var(--gray-200);
+  --border-strong: var(--gray-300);
+  --text:   var(--gray-900);
+  --text-2: var(--gray-600);
+  --text-3: var(--gray-500);
+  --heading: var(--navy);
+  --link:    var(--blue-700);
+
+  /* ─── Ação / Primária ───────────────────────────────────── */
+  --primary:       var(--blue);
+  --primary-fg:    var(--navy);   /* texto sobre botão primário é navy */
+  --primary-hover: #0F97D0;
+  --primary-press: #0E8FCB;
+
+  /* ─── Acento / Pink ─────────────────────────────────────── */
+  --accent:    var(--pink);
+  --accent-bg: var(--pink-50);
+  --accent-fg: var(--pink-700);
+
+  /* ─── Status — Sucesso ──────────────────────────────────── */
+  --success:    #1F8A5B;
+  --success-bg: #E7F6EE;
+  --success-fg: #136B45;
+  --success-bd: #BFE6CF;
+
+  /* ─── Status — Aviso ─────────────────────────────────────── */
+  --warning:    #C07C12;
+  --warning-bg: #FBF1DB;
+  --warning-fg: #8A5A12;
+  --warning-bd: #EFD9A8;
+
+  /* ─── Status — Perigo ────────────────────────────────────── */
+  --danger:    #C0392B;
+  --danger-bg: #FBEAE8;
+  --danger-fg: #9A2A20;
+  --danger-bd: #EFC9C4;
+
+  /* ─── Status — Info ──────────────────────────────────────── */
+  --info:    #0A6F9E;
+  --info-bg: var(--blue-50);
+  --info-fg: #075066;
+  --info-bd: var(--blue-100);
+
+  /* ─── Neutro ─────────────────────────────────────────────── */
+  --neutral-bg: var(--gray-100);
+  --neutral-fg: var(--gray-700);
+  --neutral-bd: var(--gray-200);
+
+  /* ─── Raio de borda ─────────────────────────────────────── */
+  --radius-base: 8px;
+  --r-xs:   3px;   /* 8 × 0.375 */
+  --r-sm:   5px;   /* 8 × 0.625 */
+  --r-md:   8px;
+  --r-lg:   12px;  /* 8 × 1.5   */
+  --r-xl:   18px;  /* 8 × 2.25  */
+  --r-full: 999px;
+
+  /* ─── Sombras ────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(14,42,66,.06);
+  --shadow-sm: 0 1px 3px rgba(14,42,66,.08), 0 1px 2px rgba(14,42,66,.05);
+  --shadow-md: 0 4px 12px -2px rgba(14,42,66,.12), 0 2px 6px -2px rgba(14,42,66,.07);
+  --shadow-lg: 0 16px 40px -12px rgba(14,42,66,.22), 0 6px 14px -8px rgba(14,42,66,.12);
+  --shadow-pink: 0 10px 28px -10px rgba(255,77,141,.45);
+
+  /* ─── Foco / Ring ───────────────────────────────────────── */
+  --ring: rgba(20,170,233,.40);
+
+  /* ─── Controles ─────────────────────────────────────────── */
+  --control-h:    40px;
+  --control-h-sm: 32px;
+  --control-h-lg: 48px;
+  --row-h:        44px;
+  --pad-x:        11px;
+
+  /* ─── Layout ─────────────────────────────────────────────── */
+  --sidebar-width:     240px;
+  --topbar-height:     60px;
+  --sidebar-bg:        var(--navy);
+  --sidebar-text:      #bcd0e2;
+  --sidebar-text-active: #FFFFFF;
+  --sidebar-item-active-bg: rgba(20,170,233,.16);
+  --sidebar-item-hover-bg:  rgba(255,255,255,.06);
+}
+
+/* ─── Base ────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--text-font);
+    font-size: var(--font-ui);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    color: var(--heading);
+    font-family: var(--display);
+  }
+
+  p { margin: 0; }
+
+  a {
+    color: var(--link);
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--blue-100);
+    color: var(--blue-800);
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+    border-radius: var(--r-xs);
+  }
+}
+
+/* ─── Utilitários customizados ───────────────────────────── */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .num {
+    font-family: var(--display);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Shimmer skeleton */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--gray-150) 25%,
+      var(--gray-100) 37%,
+      var(--gray-150) 63%
+    );
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: var(--r-sm);
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 100% 50%; }
+    100% { background-position:   0% 50%; }
+  }
+
+  /* Scrollbar customizado */
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: var(--r-full);
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--gray-300); }
+
+  /* Sidebar scrollbar escuro */
+  .sidebar-scrollbar::-webkit-scrollbar { width: 4px; }
+  .sidebar-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.15);
+    border-radius: 999px;
+  }
+
+  /* Table header — conforme DS */
+  .tbl-th {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    background: var(--surface-2);
+    padding: 9px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  /* KPI delta colors */
+  .delta-up   { color: var(--success-fg); }
+  .delta-down { color: var(--danger-fg);  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ─── Componentes globais ────────────────────────────────── */
+@layer components {
+  /* Card base */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: var(--r-sm);
+    color: var(--sidebar-text);
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 150ms, color 150ms;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    position: relative;
+  }
+  .nav-item:hover {
+    background: var(--sidebar-item-hover-bg);
+    color: var(--sidebar-text-active);
+  }
+  .nav-item.active {
+    background: var(--sidebar-item-active-bg);
+    color: var(--sidebar-text-active);
+  }
+  .nav-item.active svg {
+    color: var(--blue);
+  }
+
+  /* Sidebar nav group label */
+  .nav-group-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: #6f8aa3;
+    padding: 6px 12px;
+  }
+
+  /* Status badges */
+  .badge-pendente   { background: var(--warning-bg); color: var(--warning-fg); border: 1px solid var(--warning-bd); }
+  .badge-confirmado { background: var(--info-bg);    color: var(--info-fg);    border: 1px solid var(--info-bd);    }
+  .badge-cancelado  { background: var(--danger-bg);  color: var(--danger-fg);  border: 1px solid var(--danger-bd);  }
+  .badge-concluido  { background: var(--success-bg); color: var(--success-fg); border: 1px solid var(--success-bd); }
+}
+
+/* ─── react-big-calendar overrides ──────────────────────── */
+.rbc-calendar {
+  font-family: var(--text-font) !important;
+  font-size: 13px;
+}
+.rbc-header {
+  padding: 8px 4px;
+  font-weight: 600;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border) !important;
+}
+.rbc-event {
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.rbc-today { background: var(--blue-50) !important; }
+.rbc-off-range-bg { background: var(--gray-25) !important; }
+.rbc-toolbar button {
+  border-radius: var(--r-md) !important;
+  font-family: var(--text-font) !important;
+  font-size: 13px !important;
+}
+.rbc-toolbar button:hover { background: var(--gray-100) !important; }
+.rbc-toolbar button.rbc-active {
+  background: var(--blue) !important;
+  color: white !important;
+  border-color: var(--blue) !important;
+}
