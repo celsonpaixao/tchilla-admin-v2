@@ -16,21 +16,45 @@ function NotificationListener({ userId }: { userId: number }) {
   return null;
 }
 
-/* Aplica [data-style], [data-density], --radius-base e dir no <html> */
+const PRIMARIES: Record<string, { fg: string; hover: string; press: string }> = {
+  "#14AAE9": { fg: "#0E2A42", hover: "#0F97D0", press: "#0E8FCB" },
+  "#0A6F9E": { fg: "#FFFFFF", hover: "#085A82", press: "#0A567A" },
+  "#0E2A42": { fg: "#FFFFFF", hover: "#1C3A52", press: "#0A2030" },
+};
+const ACCENTS: Record<string, { fg: string; bg: string; b100: string }> = {
+  "#FF4D8D": { fg: "#C81E5E", bg: "#FFF1F6", b100: "#FFE3EC" },
+  "#F25C9C": { fg: "#BC1C68", bg: "#FCE8F1", b100: "#F9D2E2" },
+  "#E8638F": { fg: "#AE3A61", bg: "#FBEBF0", b100: "#F4D2DE" },
+};
+
+/* Aplica [data-style], [data-density], --radius-base, dir e cores no <html> */
 function ThemeApplier() {
-  const { style, density, radiusBase, direction } = useThemeStore();
+  const { style, density, radiusBase, direction, primaryColor, accentColor } = useThemeStore();
 
   useEffect(() => {
     const html = document.documentElement;
     html.setAttribute("data-style", style);
-    if (density === "comfy") {
-      html.setAttribute("data-density", "comfy");
-    } else {
-      html.removeAttribute("data-density");
-    }
+    if (density === "comfy") html.setAttribute("data-density", "comfy");
+    else html.removeAttribute("data-density");
     html.style.setProperty("--radius-base", `${radiusBase}px`);
     html.setAttribute("dir", direction);
-  }, [style, density, radiusBase, direction]);
+
+    const p = PRIMARIES[primaryColor] ?? PRIMARIES["#14AAE9"];
+    html.style.setProperty("--blue", primaryColor);
+    html.style.setProperty("--primary", primaryColor);
+    html.style.setProperty("--primary-fg", p.fg);
+    html.style.setProperty("--primary-hover", p.hover);
+    html.style.setProperty("--primary-press", p.press);
+
+    const a = ACCENTS[accentColor] ?? ACCENTS["#FF4D8D"];
+    html.style.setProperty("--pink", accentColor);
+    html.style.setProperty("--accent", accentColor);
+    html.style.setProperty("--accent-fg", a.fg);
+    html.style.setProperty("--accent-bg", a.bg);
+    html.style.setProperty("--pink-50", a.bg);
+    html.style.setProperty("--pink-100", a.b100);
+    html.style.setProperty("--pink-700", a.fg);
+  }, [style, density, radiusBase, direction, primaryColor, accentColor]);
 
   return null;
 }

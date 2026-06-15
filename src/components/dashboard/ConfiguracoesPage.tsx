@@ -1,6 +1,6 @@
 "use client";
 import { useTransition } from "react";
-import { LogOut, Shield, Mail, Phone, User, AlignLeft, AlignRight } from "lucide-react";
+import { LogOut, Shield, Mail, Phone, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { UsuarioInterface } from "@/types/user.types";
@@ -15,63 +15,158 @@ interface ConfiguracoesPageProps {
   user: UsuarioInterface | null;
 }
 
-/* ── Componente de opção de tema ──────────────────────────── */
-function ThemeOption({
-  label, description, active, onClick,
-}: { label: string; description?: string; active: boolean; onClick: () => void }) {
+/* ── Segmented control (style idêntico ao twk-seg do DS) ─────── */
+function TwkSeg<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  const idx = Math.max(0, options.findIndex((o) => o.value === value));
+  const n = options.length;
   return (
-    <button
-      onClick={onClick}
+    <div
+      role="radiogroup"
       style={{
-        display:      "flex",
-        flexDirection:"column",
-        gap:          4,
-        padding:      "12px 14px",
-        borderRadius: "var(--r-md)",
-        border:       `2px solid ${active ? "var(--blue)" : "var(--border)"}`,
-        background:   active ? "var(--blue-50)" : "var(--surface)",
-        cursor:       "pointer",
-        textAlign:    "left",
-        transition:   "border-color .15s, background .15s",
-        flex:         1,
+        position: "relative", display: "flex", padding: 2,
+        borderRadius: 8, background: "rgba(0,0,0,.06)", userSelect: "none",
       }}
     >
-      <span style={{
-        fontSize:   13,
-        fontWeight: 600,
-        color:      active ? "var(--blue-700)" : "var(--text)",
-      }}>
-        {label}
-      </span>
-      {description && (
-        <span style={{ fontSize: 11.5, color: "var(--text-3)", lineHeight: 1.4 }}>
-          {description}
-        </span>
-      )}
-      {/* indicador */}
-      {active && (
-        <span style={{
-          marginTop:    4,
-          width:        18,
-          height:       18,
-          borderRadius: "50%",
-          background:   "var(--blue)",
-          display:      "grid",
-          placeItems:   "center",
-        }}>
-          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-            <path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-      )}
-    </button>
+      {/* thumb deslizante */}
+      <div
+        style={{
+          position: "absolute", top: 2, bottom: 2,
+          left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+          width: `calc((100% - 4px) / ${n})`,
+          borderRadius: 6,
+          background: "rgba(255,255,255,.9)",
+          boxShadow: "0 1px 2px rgba(0,0,0,.12)",
+          transition: "left .15s cubic-bezier(.3,.7,.4,1), width .15s",
+          pointerEvents: "none",
+        }}
+      />
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={o.value === value}
+          onClick={() => onChange(o.value)}
+          style={{
+            position: "relative", zIndex: 1, flex: 1,
+            border: 0, background: "transparent",
+            color: "var(--text)", fontWeight: 500,
+            minHeight: 22, borderRadius: 6,
+            cursor: "pointer", padding: "4px 6px",
+            fontSize: 12, lineHeight: 1.2,
+          }}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
+/* ── Chips de cor (style idêntico ao twk-chip do DS) ──────────── */
+function isLight(hex: string): boolean {
+  const h = hex.replace("#", "").padEnd(6, "0");
+  const n = parseInt(h.slice(0, 6), 16);
+  if (isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+function TwkChips({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div style={{ display: "flex", gap: 6 }}>
+      {options.map((color) => {
+        const on = value.toLowerCase() === color.toLowerCase();
+        const light = isLight(color);
+        return (
+          <button
+            key={color}
+            type="button"
+            aria-pressed={on}
+            title={color}
+            onClick={() => onChange(color)}
+            style={{
+              flex: 1, height: 46, padding: 0, border: 0,
+              borderRadius: 6, background: color, cursor: "pointer",
+              position: "relative", overflow: "hidden",
+              boxShadow: on
+                ? "0 0 0 1.5px rgba(0,0,0,.85), 0 2px 6px rgba(0,0,0,.15)"
+                : "0 0 0 .5px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.06)",
+              transition: "transform .12s cubic-bezier(.3,.7,.4,1), box-shadow .12s",
+            }}
+            onMouseEnter={(e) => {
+              if (!on) (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform = "";
+            }}
+          >
+            {on && (
+              <svg
+                viewBox="0 0 14 14"
+                style={{ position: "absolute", top: 6, left: 6, width: 13, height: 13 }}
+              >
+                <path
+                  d="M3 7.2 5.8 10 11 4.2"
+                  fill="none"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  stroke={light ? "rgba(0,0,0,.78)" : "#fff"}
+                />
+              </svg>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Helpers de layout ────────────────────────────────────────── */
+const S = {
+  sect: {
+    fontSize: 10, fontWeight: 600, letterSpacing: ".06em",
+    textTransform: "uppercase" as const, color: "var(--text-3)",
+    paddingTop: 4,
+  },
+  row: { display: "flex", flexDirection: "column" as const, gap: 5 },
+  lbl: {
+    display: "flex", justifyContent: "space-between", alignItems: "baseline",
+  },
+  lblTxt: { fontWeight: 500, fontSize: 12, color: "var(--text-2)" } as React.CSSProperties,
+  val: {
+    fontSize: 11.5, color: "var(--text-3)",
+    fontVariantNumeric: "tabular-nums" as const,
+  },
+};
+
+/* ── Página ───────────────────────────────────────────────────── */
 export function ConfiguracoesPage({ user }: ConfiguracoesPageProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const { style, density, radiusBase, direction, setStyle, setDensity, setRadius, setDirection } = useThemeStore();
+  const {
+    style, density, radiusBase, direction,
+    primaryColor, accentColor,
+    setStyle, setDensity, setRadius, setDirection,
+    setPrimary, setAccent,
+  } = useThemeStore();
 
   function handleLogout() {
     startTransition(async () => {
@@ -101,7 +196,9 @@ export function ConfiguracoesPage({ user }: ConfiguracoesPageProps) {
             <div className="flex items-center gap-4">
               <GlobalAvatar src={user.foto} name={user.nome} size="xl" />
               <div>
-                <h2 className="text-lg font-semibold" style={{ color: "var(--text)" }}>{user.nome}</h2>
+                <h2 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+                  {user.nome}
+                </h2>
                 <span
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mt-1"
                   style={{ background: "var(--info-bg)", color: "var(--info-fg)" }}
@@ -112,20 +209,25 @@ export function ConfiguracoesPage({ user }: ConfiguracoesPageProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t"
+              style={{ borderColor: "var(--border)" }}
+            >
               {[
-                { icon: <Mail size={14} />, label: "Email", value: user.email },
-                { icon: <Phone size={14} />, label: "Telefone", value: user.telefone },
-                { icon: <User size={14} />, label: "ID", value: `#${user.id}` },
-                { icon: <Shield size={14} />, label: "Verificado", value: user.verificado ? "Sim" : "Não" },
-                { icon: <User size={14} />, label: "Membro desde", value: formatDate(user.dataCriacao) },
+                { icon: <Mail size={14} />,   label: "Email",         value: user.email },
+                { icon: <Phone size={14} />,  label: "Telefone",      value: user.telefone },
+                { icon: <User size={14} />,   label: "ID",            value: `#${user.id}` },
+                { icon: <Shield size={14} />, label: "Verificado",    value: user.verificado ? "Sim" : "Não" },
+                { icon: <User size={14} />,   label: "Membro desde",  value: formatDate(user.dataCriacao) },
               ].map((item) => (
                 <div key={item.label} className="space-y-1">
                   <div className="flex items-center gap-1.5">
                     <span style={{ color: "var(--text-3)" }}>{item.icon}</span>
                     <p className="text-xs" style={{ color: "var(--text-3)" }}>{item.label}</p>
                   </div>
-                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.value}</p>
+                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                    {item.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -136,11 +238,13 @@ export function ConfiguracoesPage({ user }: ConfiguracoesPageProps) {
             className="rounded-xl p-5 space-y-3"
             style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
-            <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Sobre o sistema</h3>
+            <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+              Sobre o sistema
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: "Versão", value: "2.0.0 (Next.js)" },
-                { label: "Ambiente", value: process.env.NODE_ENV === "production" ? "Produção" : "Homologação" },
+                { label: "Versão",    value: "2.0.0 (Next.js)" },
+                { label: "Ambiente",  value: process.env.NODE_ENV === "production" ? "Produção" : "Homologação" },
               ].map((item) => (
                 <div key={item.label}>
                   <p className="text-xs" style={{ color: "var(--text-3)" }}>{item.label}</p>
@@ -163,181 +267,132 @@ export function ConfiguracoesPage({ user }: ConfiguracoesPageProps) {
 
         </div>{/* fim coluna esquerda */}
 
-        {/* ── Coluna direita: aparência (sticky em desktop) ── */}
+        {/* ── Coluna direita: aparência ──────────────────── */}
         <div className="lg:sticky" style={{ top: "calc(var(--topbar-height) + 24px)" }}>
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}
+          >
+            {/* Header */}
+            <div
+              className="px-5 py-4 border-b"
+              style={{ borderColor: "var(--border)", background: "var(--surface-2)" }}
+            >
+              <h3
+                style={{
+                  fontSize: 13, fontWeight: 600,
+                  color: "var(--text)", margin: 0,
+                }}
+              >
+                Aparência
+              </h3>
+              <p style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                Alterações aplicam-se imediatamente.
+              </p>
+            </div>
 
-      {/* ── Aparência ──────────────────────────────────────── */}
-      <div
-        className="rounded-xl p-6 space-y-6"
-        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-      >
-        <div>
-          <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Aparência</h3>
-          <p className="text-xs mt-0.5" style={{ color: "var(--text-3)" }}>
-            Personaliza o visual da interface. As alterações aplicam-se imediatamente.
-          </p>
-        </div>
+            {/* Body — padding e gap idênticos ao twk-body */}
+            <div style={{ padding: "4px 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
 
-        {/* Estilo */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold" style={{ color: "var(--text-2)", fontFamily: "var(--mono)", letterSpacing: ".08em", textTransform: "uppercase" }}>
-            Estilo
-          </p>
-          <div className="flex gap-3">
-            {(["minimal", "expressive"] as ThemeStyle[]).map((s) => (
-              <ThemeOption
-                key={s}
-                label={s === "minimal" ? "Minimal" : "Expressivo"}
-                description={s === "minimal" ? "Interface limpa, sombras suaves" : "Sombras ricas com toque rosa"}
-                active={style === s}
-                onClick={() => setStyle(s)}
-              />
-            ))}
-          </div>
-        </div>
+              {/* ── SECÇÃO ESTILO ── */}
+              <div style={S.sect}>Estilo</div>
 
-        {/* Densidade */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold" style={{ color: "var(--text-2)", fontFamily: "var(--mono)", letterSpacing: ".08em", textTransform: "uppercase" }}>
-            Densidade
-          </p>
-          <div className="flex gap-3">
-            {(["compact", "comfy"] as ThemeDensity[]).map((d) => (
-              <ThemeOption
-                key={d}
-                label={d === "compact" ? "Compacto" : "Confortável"}
-                description={d === "compact" ? "Mais itens visíveis, filas estreitas" : "Mais espaço entre elementos"}
-                active={density === d}
-                onClick={() => setDensity(d)}
-              />
-            ))}
-          </div>
-        </div>
+              <div style={S.row}>
+                <div style={S.lbl}>
+                  <span style={S.lblTxt}>Modo</span>
+                </div>
+                <TwkSeg<ThemeStyle>
+                  value={style}
+                  options={[
+                    { value: "minimal",    label: "Minimal" },
+                    { value: "expressive", label: "Expressivo" },
+                  ]}
+                  onChange={setStyle}
+                />
+              </div>
 
-        {/* Raio base */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold" style={{ color: "var(--text-2)", fontFamily: "var(--mono)", letterSpacing: ".08em", textTransform: "uppercase" }}>
-              Raio base
-            </p>
-            <div style={{
-              fontFamily: "var(--mono)", fontSize: 12,
-              color: "var(--blue-700)", fontWeight: 700,
-              background: "var(--blue-50)", padding: "2px 10px",
-              borderRadius: "var(--r-full)",
-            }}>
-              {radiusBase}px
+              <div style={S.row}>
+                <div style={S.lbl}>
+                  <span style={S.lblTxt}>Densidade</span>
+                </div>
+                <TwkSeg<ThemeDensity>
+                  value={density}
+                  options={[
+                    { value: "compact", label: "Compacta" },
+                    { value: "comfy",   label: "Confortável" },
+                  ]}
+                  onChange={setDensity}
+                />
+              </div>
+
+              <div style={S.row}>
+                <div style={S.lbl}>
+                  <span style={S.lblTxt}>Raio base</span>
+                  <span style={S.val}>{radiusBase}px</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={16}
+                  step={1}
+                  value={radiusBase}
+                  onChange={(e) => setRadius(Number(e.target.value))}
+                  style={{
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    appearance: "none" as any,
+                    WebkitAppearance: "none",
+                    width: "100%",
+                    height: 4,
+                    marginTop: 6,
+                    borderRadius: 999,
+                    background: `linear-gradient(to right, var(--blue) ${(radiusBase / 16) * 100}%, rgba(0,0,0,.12) ${(radiusBase / 16) * 100}%)`,
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                />
+              </div>
+
+              <div style={S.row}>
+                <div style={S.lbl}>
+                  <span style={S.lblTxt}>Direção</span>
+                </div>
+                <TwkSeg<ThemeDir>
+                  value={direction}
+                  options={[
+                    { value: "ltr", label: "Esq → Dir" },
+                    { value: "rtl", label: "Dir → Esq" },
+                  ]}
+                  onChange={setDirection}
+                />
+              </div>
+
+              {/* ── SECÇÃO COR ── */}
+              <div style={{ ...S.sect, paddingTop: 12 }}>Cor</div>
+
+              <div style={S.row}>
+                <div style={S.lbl}>
+                  <span style={S.lblTxt}>Ação (azul)</span>
+                </div>
+                <TwkChips
+                  value={primaryColor}
+                  options={["#14AAE9", "#0A6F9E", "#0E2A42"]}
+                  onChange={setPrimary}
+                />
+              </div>
+
+              <div style={S.row}>
+                <div style={S.lbl}>
+                  <span style={S.lblTxt}>Acento (rosa)</span>
+                </div>
+                <TwkChips
+                  value={accentColor}
+                  options={["#FF4D8D", "#F25C9C", "#E8638F"]}
+                  onChange={setAccent}
+                />
+              </div>
+
             </div>
           </div>
-
-          {/* Presets visuais */}
-          <div className="flex gap-2">
-            {[0, 4, 8, 12, 16, 20].map((r) => (
-              <button
-                key={r}
-                onClick={() => setRadius(r)}
-                title={`${r}px`}
-                style={{
-                  flex:        1,
-                  height:      36,
-                  borderRadius: r === 0 ? 2 : r,
-                  border:      `2px solid ${radiusBase === r ? "var(--blue)" : "var(--border)"}`,
-                  background:  radiusBase === r ? "var(--blue-50)" : "var(--surface-2)",
-                  cursor:      "pointer",
-                  transition:  "border-color .15s, background .15s",
-                  display:     "grid",
-                  placeItems:  "center",
-                }}
-              >
-                <span style={{
-                  fontFamily: "var(--mono)", fontSize: 10,
-                  color: radiusBase === r ? "var(--blue-700)" : "var(--text-3)",
-                  fontWeight: 700,
-                }}>
-                  {r}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Slider contínuo */}
-          <input
-            type="range"
-            min={0}
-            max={20}
-            step={2}
-            value={radiusBase}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            style={{ width: "100%", accentColor: "var(--blue)", cursor: "pointer" }}
-          />
-
-          {/* Preview das formas */}
-          <div className="flex items-center gap-3 pt-1">
-            {[
-              { label: "xs", mult: 0.375 },
-              { label: "sm", mult: 0.625 },
-              { label: "md", mult: 1 },
-              { label: "lg", mult: 1.5 },
-              { label: "xl", mult: 2.25 },
-            ].map(({ label, mult }) => (
-              <div key={label} className="flex flex-col items-center gap-1.5">
-                <div style={{
-                  width:        36,
-                  height:       28,
-                  borderRadius: Math.round(radiusBase * mult),
-                  background:   "var(--blue-100)",
-                  border:       "1.5px solid var(--blue-200)",
-                }} />
-                <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--text-3)", textTransform: "uppercase" }}>
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Direção */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold" style={{ color: "var(--text-2)", fontFamily: "var(--mono)", letterSpacing: ".08em", textTransform: "uppercase" }}>
-            Direção
-          </p>
-          <div className="flex gap-3">
-            {([
-              { value: "ltr", label: "Esquerda → Direita", icon: <AlignLeft size={14} /> },
-              { value: "rtl", label: "Direita → Esquerda", icon: <AlignRight size={14} /> },
-            ] as { value: ThemeDir; label: string; icon: React.ReactNode }[]).map(({ value, label, icon }) => (
-              <button
-                key={value}
-                onClick={() => setDirection(value)}
-                style={{
-                  flex:         1,
-                  display:      "flex",
-                  alignItems:   "center",
-                  gap:          8,
-                  padding:      "10px 14px",
-                  borderRadius: "var(--r-md)",
-                  border:       `2px solid ${direction === value ? "var(--blue)" : "var(--border)"}`,
-                  background:   direction === value ? "var(--blue-50)" : "var(--surface)",
-                  cursor:       "pointer",
-                  transition:   "border-color .15s, background .15s",
-                }}
-              >
-                <span style={{ color: direction === value ? "var(--blue-700)" : "var(--text-3)" }}>
-                  {icon}
-                </span>
-                <span style={{
-                  fontSize:   13,
-                  fontWeight: 600,
-                  color:      direction === value ? "var(--blue-700)" : "var(--text)",
-                }}>
-                  {label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
         </div>{/* fim coluna direita */}
 
       </div>{/* fim grid */}
