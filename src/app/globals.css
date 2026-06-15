@@ -135,7 +135,7 @@
   --pad-x:        11px;
 
   /* ─── Layout ─────────────────────────────────────────────── */
-  --sidebar-width:     240px;
+  --sidebar-width:     248px;
   --topbar-height:     60px;
   --sidebar-bg:        var(--navy);
   --sidebar-text:      #bcd0e2;
@@ -232,12 +232,12 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--gray-300); }
 
-  /* Sidebar scrollbar escuro */
-  .sidebar-scrollbar::-webkit-scrollbar { width: 4px; }
-  .sidebar-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .sidebar-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,.15);
-    border-radius: 999px;
+  /* Sidebar scrollbar — 8px conforme DS */
+  .side-scroll-custom::-webkit-scrollbar { width: 8px; }
+  .side-scroll-custom::-webkit-scrollbar-track { background: transparent; }
+  .side-scroll-custom::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.12);
+    border-radius: 99px;
   }
 
   /* Table header — conforme DS */

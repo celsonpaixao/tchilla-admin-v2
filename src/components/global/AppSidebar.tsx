@@ -1,131 +1,312 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
-  CalendarCheck, LayoutDashboard, Tag, Users, UserCheck,
-  CreditCard, Settings, ChevronDown, LogOut, Loader2,
-  Bell, Megaphone, ChevronRight, Menu, X, BarChart3
+  LayoutDashboard, CalendarCheck, Users, UserCheck,
+  CreditCard, Settings, LogOut, Loader2, Menu, X,
+  Tag, Megaphone, BarChart3,
 } from "lucide-react";
-import { cn, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 import { toast } from "sonner";
 import type { UsuarioInterface } from "@/types/user.types";
 import { useNotificationStore } from "@/stores/notificationStore";
 
-interface NavItem {
+/* ── Nav config ────────────────────────────────────────────── */
+interface NavLink {
   label: string;
-  href?: string;
+  href: string;
   icon: React.ReactNode;
-  children?: NavItem[];
+  count?: number | null;
+}
+interface NavGroup {
+  groupLabel: string;
+  links: NavLink[];
 }
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    label: "Reservas",
-    icon: <CalendarCheck size={16} />,
-    children: [
-      { label: "Relatório", href: ROUTES.RESERVAS.RELATORIO, icon: <LayoutDashboard size={14} /> },
-      { label: "Listagem", href: ROUTES.RESERVAS.LISTAGEM, icon: <CalendarCheck size={14} /> },
-    ],
-  },
-  {
-    label: "Gestão",
-    icon: <Tag size={16} />,
-    children: [
-      { label: "Categorias", href: ROUTES.GESTAO.CATEGORIAS, icon: <Tag size={14} /> },
-      { label: "Supervisores", href: ROUTES.GESTAO.SUPERVISORES, icon: <UserCheck size={14} /> },
-      { label: "Campanhas", href: ROUTES.GESTAO.CAMPANHAS, icon: <Megaphone size={14} /> },
-    ],
-  },
-  {
-    label: "Usuários",
-    icon: <Users size={16} />,
-    children: [
-      { label: "Clientes", href: ROUTES.USUARIOS.CLIENTES, icon: <Users size={14} /> },
-      { label: "Parceiros", href: ROUTES.USUARIOS.PARCEIROS, icon: <UserCheck size={14} /> },
-      { label: "Relatório", href: ROUTES.USUARIOS.RELATORIO, icon: <BarChart3 size={14} /> },
-    ],
-  },
-  {
-    label: "Finanças",
-    icon: <CreditCard size={16} />,
-    children: [
-      { label: "Pagamentos", href: ROUTES.FINANCEIRO.PAGAMENTOS, icon: <CreditCard size={14} /> },
-    ],
-  },
-];
+function buildNav(unreadCount: number): NavGroup[] {
+  return [
+    {
+      groupLabel: "Operação",
+      links: [
+        { label: "Relatório",  href: ROUTES.RESERVAS.RELATORIO, icon: <LayoutDashboard size={17} /> },
+        { label: "Reservas",   href: ROUTES.RESERVAS.LISTAGEM,  icon: <CalendarCheck size={17} />, count: unreadCount || null },
+      ],
+    },
+    {
+      groupLabel: "Gestão",
+      links: [
+        { label: "Categorias",   href: ROUTES.GESTAO.CATEGORIAS,  icon: <Tag size={17} /> },
+        { label: "Supervisores", href: ROUTES.GESTAO.SUPERVISORES, icon: <UserCheck size={17} /> },
+        { label: "Campanhas",    href: ROUTES.GESTAO.CAMPANHAS,    icon: <Megaphone size={17} /> },
+      ],
+    },
+    {
+      groupLabel: "Usuários",
+      links: [
+        { label: "Clientes",  href: ROUTES.USUARIOS.CLIENTES,  icon: <Users size={17} /> },
+        { label: "Parceiros", href: ROUTES.USUARIOS.PARCEIROS, icon: <UserCheck size={17} /> },
+        { label: "Relatório", href: ROUTES.USUARIOS.RELATORIO, icon: <BarChart3 size={17} /> },
+      ],
+    },
+    {
+      groupLabel: "Análise",
+      links: [
+        { label: "Pagamentos", href: ROUTES.FINANCEIRO.PAGAMENTOS, icon: <CreditCard size={17} /> },
+      ],
+    },
+    {
+      groupLabel: "Sistema",
+      links: [
+        { label: "Definições", href: ROUTES.CONFIGURACOES, icon: <Settings size={17} /> },
+      ],
+    },
+  ];
+}
 
-function NavGroup({ item, pathname }: { item: NavItem; pathname: string }) {
-  const isActive = item.children?.some((c) => c.href && pathname.startsWith(c.href));
-  const [open, setOpen] = useState(isActive ?? false);
+/* ── Sidebar content ────────────────────────────────────────── */
+interface SidebarContentProps {
+  user: UsuarioInterface | null;
+  pathname: string;
+  onLogout: () => void;
+  isPending: boolean;
+  unreadCount: number;
+}
 
-  if (!item.children) {
-    return (
-      <Link
-        href={item.href!}
-        className={cn("nav-item", pathname === item.href && "active")}
-      >
-        {item.icon}
-        <span className="flex-1">{item.label}</span>
-      </Link>
-    );
-  }
+function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: SidebarContentProps) {
+  const navGroups = buildNav(unreadCount);
 
   return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className={cn("nav-item w-full", isActive && "active")}
-      >
-        <span style={{ color: isActive ? "var(--blue)" : undefined }}>{item.icon}</span>
-        <span className="flex-1 text-left">{item.label}</span>
-        <ChevronDown
-          size={14}
-          className="transition-transform duration-200"
-          style={{
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            opacity: 0.5,
-          }}
-        />
-      </button>
+    <div style={{
+      position: "sticky", top: 0, height: "100vh",
+      background: "var(--navy)", color: "#cfe0ee",
+      display: "flex", flexDirection: "column",
+      padding: 0, overflow: "hidden",
+    }}>
 
-      {open && (
-        <div className="mt-0.5 ml-4 space-y-0.5 border-l" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-          {item.children.map((child) => (
-            <Link
-              key={child.href}
-              href={child.href!}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-all cursor-pointer ml-2",
-                pathname.startsWith(child.href!)
-                  ? "text-white"
-                  : "opacity-60 hover:opacity-100 hover:text-white"
-              )}
-            >
-              {child.icon}
-              {child.label}
-              {pathname.startsWith(child.href!) && (
-                <ChevronRight size={12} className="ml-auto opacity-40" />
-              )}
-            </Link>
-          ))}
+      {/* ── .side-brand ─────────────────────────────────────── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 11,
+        padding: "18px 18px 16px",
+        borderBottom: "1px solid rgba(255,255,255,.08)",
+        flexShrink: 0,
+      }}>
+        {/* símbolo — branco-lacorosa: branco c/ detalhe rosa, ideal no fundo navy */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/vectores/tchilla-simbolo-branco-lacorosa.svg"
+          alt="Tchilla"
+          style={{ height: 30, width: "auto", objectFit: "contain", flexShrink: 0 }}
+        />
+        {/* .nm — Tchilla<small>Admin</small> */}
+        <div style={{
+          fontFamily: "var(--display)",
+          fontWeight: 700,
+          fontSize: 16,
+          color: "#fff",
+          letterSpacing: "-0.01em",
+          lineHeight: 1,
+        }}>
+          Tchilla
+          <small style={{
+            display: "block",
+            fontFamily: "var(--mono)",
+            fontWeight: 400,
+            fontSize: 10,
+            letterSpacing: "0.22em",
+            color: "var(--pink)",
+            textTransform: "uppercase",
+            marginTop: 1,
+          }}>
+            Admin
+          </small>
         </div>
-      )}
+      </div>
+
+      {/* ── .side-scroll ────────────────────────────────────── */}
+      <div style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: "10px 10px 24px",
+        scrollbarWidth: "thin",
+        scrollbarColor: "rgba(255,255,255,.12) transparent",
+      }}
+        className="side-scroll-custom"
+      >
+        {navGroups.map((group, gi) => (
+          <div key={group.groupLabel} style={{ marginTop: gi === 0 ? 4 : 14 }}>
+            {/* .nav-label */}
+            <div style={{
+              fontFamily: "var(--mono)",
+              fontSize: 10,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "#6f8aa3",
+              padding: "6px 12px",
+            }}>
+              {group.groupLabel}
+            </div>
+
+            {/* .nav-link(s) */}
+            {group.links.map((link) => {
+              const isActive = pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "7px 12px",
+                    borderRadius: "var(--r-sm)",
+                    color: isActive ? "#fff" : "#bcd0e2",
+                    fontSize: 13, fontWeight: 500,
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "background .12s, color .12s",
+                    background: isActive ? "rgba(20,170,233,.16)" : "transparent",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,.07)";
+                      (e.currentTarget as HTMLElement).style.color = "#fff";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLElement).style.background = "transparent";
+                      (e.currentTarget as HTMLElement).style.color = "#bcd0e2";
+                    }
+                  }}
+                >
+                  {/* barra rosa esquerda (::before) */}
+                  {isActive && (
+                    <span aria-hidden style={{
+                      position: "absolute", left: 0, top: 6, bottom: 6,
+                      width: 3, borderRadius: 99, background: "var(--pink)",
+                    }} />
+                  )}
+
+                  {/* ícone 17×17 opacity .85 */}
+                  <span style={{
+                    width: 17, height: 17, display: "grid", placeItems: "center",
+                    flexShrink: 0, opacity: isActive ? 1 : 0.85,
+                    color: isActive ? "var(--blue)" : "inherit",
+                  }}>
+                    {link.icon}
+                  </span>
+
+                  <span style={{ flex: 1 }}>{link.label}</span>
+
+                  {/* .count badge */}
+                  {link.count != null && link.count > 0 && (
+                    <span style={{
+                      marginLeft: "auto",
+                      fontFamily: "var(--mono)", fontSize: 10.5,
+                      background: isActive ? "var(--pink)" : "rgba(255,255,255,.12)",
+                      color: isActive ? "#fff" : "inherit",
+                      padding: "1px 7px", borderRadius: 99,
+                    }}>
+                      {link.count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+
+        {/* ── Status card — "Sistema operacional" ─────────── */}
+        <div style={{
+          marginTop: 18, padding: 11, borderRadius: 10,
+          background: "rgba(255,255,255,.05)",
+          border: "1px solid rgba(255,255,255,.08)",
+        }}>
+          <div style={{ fontSize: 11, color: "#9db6cb", lineHeight: 1.45 }}>
+            Sistema operacional
+          </div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 7,
+            marginTop: 6, fontSize: 12, color: "#fff", fontWeight: 600,
+          }}>
+            <span style={{
+              width: 7, height: 7, borderRadius: "50%",
+              background: "#30BE6D",
+              boxShadow: "0 0 0 3px rgba(48,190,109,.25)",
+              flexShrink: 0,
+            }} />
+            Todos os serviços ativos
+          </div>
+        </div>
+      </div>
+
+      {/* ── Rodapé — usuário ────────────────────────────────── */}
+      <div style={{
+        padding: "10px 10px 12px",
+        borderTop: "1px solid rgba(255,255,255,.08)",
+        flexShrink: 0,
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "8px 10px", borderRadius: "var(--r-md)",
+          background: "rgba(255,255,255,.05)",
+        }}>
+          {/* Avatar */}
+          <div style={{
+            width: 30, height: 30, borderRadius: "50%",
+            background: "var(--blue)", color: "white",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 11, fontWeight: 700, flexShrink: 0,
+          }}>
+            {user ? getInitials(user.nome) : "?"}
+          </div>
+
+          {/* Nome e tipo */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              fontSize: 13, fontWeight: 600, color: "#fff", lineHeight: 1.2,
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              {user?.nome ?? "Usuário"}
+            </p>
+            <p style={{
+              fontSize: 10, color: "rgba(255,255,255,.4)", marginTop: 1,
+              fontFamily: "var(--mono)", letterSpacing: "0.08em",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              {user?.tipo ?? "Supervisor"}
+            </p>
+          </div>
+
+          {/* Logout */}
+          <button
+            onClick={onLogout}
+            disabled={isPending}
+            title="Sair" aria-label="Sair"
+            style={{
+              cursor: "pointer", background: "transparent", border: "none",
+              color: "rgba(255,255,255,.35)", padding: 4,
+              borderRadius: "var(--r-xs)", display: "grid", placeItems: "center",
+              transition: "color .12s", flexShrink: 0,
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#fff")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,.35)")}
+          >
+            {isPending ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-interface AppSidebarProps {
-  user: UsuarioInterface | null;
-}
-
-export function AppSidebar({ user }: AppSidebarProps) {
-  const pathname = usePathname();
-  const router = useRouter();
+/* ── AppSidebar principal ───────────────────────────────────── */
+export function AppSidebar({ user }: { user: UsuarioInterface | null }) {
+  const pathname    = usePathname();
+  const router      = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen]  = useState(false);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
 
   function handleLogout() {
@@ -141,123 +322,48 @@ export function AppSidebar({ user }: AppSidebarProps) {
     });
   }
 
-  const SidebarContent = () => (
-    <div
-      className="flex flex-col h-full custom-scrollbar sidebar-scrollbar"
-      style={{ background: "var(--sidebar-bg)" }}
-    >
-      {/* Logo */}
-      <div
-        className="flex items-center px-4 py-4 border-b"
-        style={{ borderColor: "rgba(255,255,255,0.08)", minHeight: 60 }}
-      >
-        <Image
-          src="/assets/vectores/tchilla-logotipo-branco.svg"
-          alt="Tchilla Admin"
-          width={120}
-          height={32}
-          priority
-        />
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 sidebar-scrollbar">
-        {NAV_ITEMS.map((item) => (
-          <NavGroup key={item.label} item={item} pathname={pathname} />
-        ))}
-      </nav>
-
-      {/* User footer */}
-      <div
-        className="p-3 border-t space-y-1"
-        style={{ borderColor: "rgba(255,255,255,0.08)" }}
-      >
-        <Link
-          href={ROUTES.CONFIGURACOES}
-          className={cn("nav-item", pathname === ROUTES.CONFIGURACOES && "active")}
-        >
-          <Settings size={15} />
-          <span className="flex-1">Configurações</span>
-        </Link>
-
-        {/* User info */}
-        <div
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg"
-          style={{ background: "rgba(255,255,255,0.04)" }}
-        >
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
-            style={{ background: "var(--blue)", color: "white" }}
-          >
-            {user ? getInitials(user.nome) : "?"}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-white truncate">
-              {user?.nome ?? "Usuário"}
-            </p>
-            <p className="text-2xs truncate" style={{ color: "rgba(255,255,255,0.4)" }}>
-              {user?.tipo ?? "Supervisor"}
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            disabled={isPending}
-            className="cursor-pointer transition-colors rounded p-1"
-            style={{ color: "rgba(255,255,255,0.4)" }}
-            aria-label="Sair"
-            title="Sair"
-          >
-            {isPending ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
-          </button>
-        </div>
-
-        <p className="text-center text-2xs py-1" style={{ color: "rgba(255,255,255,0.2)" }}>
-          © {new Date().getFullYear()} Tchilla
-        </p>
-      </div>
-    </div>
-  );
+  const props = { user, pathname, onLogout: handleLogout, isPending, unreadCount };
 
   return (
     <>
-      {/* Sidebar Desktop */}
-      <aside
-        className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-30"
-        style={{ width: "var(--sidebar-width)" }}
-      >
-        <SidebarContent />
+      {/* Desktop */}
+      <aside className="hidden lg:block" style={{
+        position: "fixed", left: 0, top: 0, bottom: 0,
+        width: "var(--sidebar-width)", zIndex: 30,
+      }}>
+        <SidebarContent {...props} />
       </aside>
 
       {/* Mobile toggle */}
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg cursor-pointer"
-        style={{ background: "var(--navy)", color: "white" }}
+        className="lg:hidden"
+        style={{
+          position: "fixed", top: 14, left: 14, zIndex: 50,
+          padding: 8, borderRadius: "var(--r-md)",
+          background: "var(--navy)", color: "white",
+          border: "none", cursor: "pointer", display: "grid", placeItems: "center",
+        }}
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Menu"
       >
         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
       </button>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <>
           <div
-            className="lg:hidden fixed inset-0 z-40"
-            style={{ background: "rgba(0,0,0,0.5)" }}
+            className="lg:hidden"
+            style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,.5)" }}
             onClick={() => setMobileOpen(false)}
           />
-          <aside
-            className="lg:hidden fixed left-0 top-0 bottom-0 z-50 flex flex-col"
-            style={{ width: "var(--sidebar-width)" }}
-          >
-            <SidebarContent />
+          <aside className="lg:hidden" style={{
+            position: "fixed", left: 0, top: 0, bottom: 0,
+            width: "var(--sidebar-width)", zIndex: 50,
+          }}>
+            <SidebarContent {...props} />
           </aside>
         </>
-      )}
-
-      {/* Notification badge — invisible anchor */}
-      {unreadCount > 0 && (
-        <span className="sr-only">{unreadCount} notificações não lidas</span>
       )}
     </>
   );
