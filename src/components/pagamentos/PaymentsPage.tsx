@@ -7,6 +7,7 @@ import { validarPagamento } from "@/actions/payment.actions";
 import { GlobalTable } from "@/components/global/GlobalTable";
 import { StatusBadge } from "@/components/global/StatusBadge";
 import { ConfirmModal } from "@/components/global/GlobalModal";
+import { PageShell } from "@/components/global/PageShell";
 import { formatCurrencyAOA, formatDatetime } from "@/lib/utils";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -93,12 +94,7 @@ export function PaymentsPage({ initialPagamentos }: PaymentsPageProps) {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>Pagamentos</h1>
-        <p className="text-sm" style={{ color: "var(--text-3)" }}>{dados.length} pagamentos</p>
-      </div>
-
+    <PageShell title="Pagamentos" subtitle={`${pagamentos.length} registos`}>
       {/* Tabs */}
       <div className="flex gap-1" style={{ borderBottom: "1px solid var(--border)" }}>
         {(["todos", "pendentes"] as const).map((tab) => (
@@ -142,6 +138,6 @@ export function PaymentsPage({ initialPagamentos }: PaymentsPageProps) {
         confirmLabel="Validar"
         confirmVariant="primary"
       />
-    </div>
+    </PageShell>
   );
 }

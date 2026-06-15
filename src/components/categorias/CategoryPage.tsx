@@ -11,6 +11,7 @@ import {
 import { GlobalModal, ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalInput } from "@/components/global/GlobalInput";
 import { GlobalButton } from "@/components/global/GlobalButton";
+import { PageShell } from "@/components/global/PageShell";
 
 interface CategoryPageProps {
   initialCategorias: CategoryData[];
@@ -126,20 +127,15 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>Categorias</h1>
-          <p className="text-sm" style={{ color: "var(--text-3)" }}>{categorias.length} categorias cadastradas</p>
-        </div>
-        <GlobalButton
-          leftIcon={<Plus size={15} />}
-          onClick={() => { resetForm(); setCreateOpen(true); }}
-        >
+    <PageShell
+      title="Categorias"
+      subtitle={`${categorias.length} categorias cadastradas`}
+      actions={
+        <GlobalButton leftIcon={<Plus size={15} />} onClick={() => { resetForm(); setCreateOpen(true); }}>
           Nova Categoria
         </GlobalButton>
-      </div>
-
+      }
+    >
       <div className="space-y-3">
         {categorias.map((cat) => (
           <div key={cat.id} className="card overflow-hidden">
@@ -311,6 +307,6 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
         loading={isPending}
         confirmLabel="Remover"
       />
-    </div>
+    </PageShell>
   );
 }

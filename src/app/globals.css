@@ -175,6 +175,42 @@
   --r-xl:   calc(var(--radius-base) * 2.25);
 }
 
+/* ─── Layout responsivo ─────────────────────────────────── */
+/* Sidebar só existe no desktop (lg+); no mobile o conteúdo ocupa a largura total */
+.content-area {
+  padding-left: 0;
+}
+@media (min-width: 1024px) {
+  .content-area {
+    padding-left: var(--sidebar-width);
+  }
+}
+
+/* ─── Propagação global de densidade ─────────────────────── */
+
+/* Inputs e selects reagem aos tokens de controlo */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  font-size: var(--font-ui);
+}
+
+/* Font size propaga para elementos de texto UI — sobrepõe Tailwind text-sm/text-xs */
+[data-density="comfy"] p,
+[data-density="comfy"] span:not(.badge):not([class*="text-"]),
+[data-density="comfy"] a,
+[data-density="comfy"] li,
+[data-density="comfy"] label,
+[data-density="comfy"] td,
+[data-density="comfy"] th {
+  font-size: var(--font-ui);
+}
+
+/* Aplica gap/espaçamento a grids e flex containers que usam a var */
+.gap-ui   { gap: var(--gap); }
+.pad-ui   { padding: var(--pad-x); }
+.pad-x-ui { padding-left: var(--pad-x); padding-right: var(--pad-x); }
+
 /* ─── Base ────────────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after {

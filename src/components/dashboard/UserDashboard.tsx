@@ -7,6 +7,7 @@ import { Users, UserCheck, Building2 } from "lucide-react";
 import type { UserMetrics, UserChartData } from "@/types/metrics.types";
 import { MONTHS_PT } from "@/constants/app.constants";
 import { KPICard } from "@/components/global/KPICard";
+import { PageShell } from "@/components/global/PageShell";
 
 interface UserDashboardProps {
   metricas: UserMetrics | null;
@@ -22,13 +23,10 @@ export function UserDashboard({ metricas, chartData }: UserDashboardProps) {
   })) ?? [];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: "var(--heading)" }}>Relatório de Usuários</h1>
-        <p className="text-sm" style={{ color: "var(--text-3)" }}>
-          {metricas ? `${MONTHS_PT[metricas.mes - 1]} ${metricas.ano}` : "—"}
-        </p>
-      </div>
+    <PageShell
+      title="Relatório de Usuários"
+      subtitle={metricas ? `${MONTHS_PT[metricas.mes - 1]} ${metricas.ano}` : undefined}
+    >
 
       {/* KPIs — conforme DS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -85,6 +83,6 @@ export function UserDashboard({ metricas, chartData }: UserDashboardProps) {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

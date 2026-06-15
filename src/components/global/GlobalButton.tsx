@@ -63,9 +63,9 @@ const HOVER_STYLES: Record<ButtonVariant, React.CSSProperties> = {
 };
 
 const SIZE_STYLES: Record<ButtonSize, { height: string; padding: string; fontSize: string; gap: string; borderRadius: string }> = {
-  sm: { height: "var(--control-h-sm)", padding: "0 11px", fontSize: "12.5px", gap: "6px", borderRadius: "var(--r-md)" },
-  md: { height: "var(--control-h)",    padding: "0 14px", fontSize: "13px",   gap: "7px", borderRadius: "var(--r-md)" },
-  lg: { height: "var(--control-h-lg)", padding: "0 18px", fontSize: "14px",   gap: "8px", borderRadius: "var(--r-md)" },
+  sm: { height: "var(--control-h-sm)", padding: "0 var(--pad-x)",      fontSize: "var(--font-sm)", gap: "6px", borderRadius: "var(--r-md)" },
+  md: { height: "var(--control-h)",    padding: "0 calc(var(--pad-x) + 3px)", fontSize: "var(--font-ui)", gap: "7px", borderRadius: "var(--r-md)" },
+  lg: { height: "var(--control-h-lg)", padding: "0 calc(var(--pad-x) + 7px)", fontSize: "var(--font-ui)", gap: "8px", borderRadius: "var(--r-md)" },
 };
 
 export const GlobalButton = forwardRef<HTMLButtonElement, GlobalButtonProps>(

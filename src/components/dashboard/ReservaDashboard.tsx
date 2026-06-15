@@ -11,6 +11,7 @@ import { GlobalDrawer } from "@/components/global/GlobalDrawer";
 import { ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { KPICard } from "@/components/global/KPICard";
+import { PageShell } from "@/components/global/PageShell";
 import { formatCurrencyAOA, formatDatetime } from "@/lib/utils";
 
 
@@ -49,7 +50,7 @@ export function ReservaDashboard({ metricas, reservasPendentes: initialPendentes
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <PageShell title="Relatório de Reservas">
       {/* KPI Cards — layout DS: grid 4 cols */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
@@ -276,6 +277,6 @@ export function ReservaDashboard({ metricas, reservasPendentes: initialPendentes
         confirmLabel={confirmAction?.label ?? "Confirmar"}
         confirmVariant={confirmAction?.status === RESERVA_STATUS_CODE.Cancelado ? "danger" : "primary"}
       />
-    </div>
+    </PageShell>
   );
 }

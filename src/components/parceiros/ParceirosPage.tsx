@@ -7,6 +7,7 @@ import { deletarAgencia } from "@/actions/agencia.actions";
 import { GlobalTable } from "@/components/global/GlobalTable";
 import { ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
+import { PageShell } from "@/components/global/PageShell";
 import { formatDate } from "@/lib/utils";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -83,12 +84,7 @@ export function ParceirosPage({ initialAgencias }: ParceirosPageProps) {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>Parceiros</h1>
-        <p className="text-sm" style={{ color: "var(--text-3)" }}>{agencias.length} parceiros cadastrados</p>
-      </div>
-
+    <PageShell title="Parceiros" subtitle={`${agencias.length} parceiros cadastrados`}>
       <GlobalTable data={agencias} columns={columns} searchPlaceholder="Buscar parceiro…" emptyMessage="Nenhum parceiro encontrado." />
 
       <ConfirmModal
@@ -100,6 +96,6 @@ export function ParceirosPage({ initialAgencias }: ParceirosPageProps) {
         loading={isPending}
         confirmLabel="Remover"
       />
-    </div>
+    </PageShell>
   );
 }

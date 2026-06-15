@@ -21,12 +21,9 @@ export default async function DashboardLayout({
       {/* Sidebar — position: fixed, fora do fluxo */}
       <AppSidebar user={user} />
 
-      {/* Área de conteúdo — ocupa só o espaço à direita da sidebar */}
-      <main
-        className="min-h-screen flex flex-col"
-        style={{ paddingLeft: "var(--sidebar-width)" }}
-      >
-        {/* Topbar dentro do main → sticky apenas na área de conteúdo, não cobre a sidebar */}
+      {/* Área de conteúdo — .content-area aplica paddingLeft só em lg+ */}
+      <main className="content-area min-h-screen flex flex-col">
+        {/* Topbar dentro do main → sticky só na área de conteúdo */}
         <Topbar user={user} />
 
         {/* Skip link para acessibilidade */}
@@ -38,7 +35,7 @@ export default async function DashboardLayout({
           Ir para o conteúdo
         </a>
 
-        <div id="main-content" className="flex-1 p-6">
+        <div id="main-content" className="flex-1 p-4 sm:p-5 lg:p-6">
           {children}
         </div>
       </main>

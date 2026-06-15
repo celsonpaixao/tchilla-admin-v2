@@ -8,6 +8,7 @@ import { GlobalTable } from "@/components/global/GlobalTable";
 import { GlobalModal } from "@/components/global/GlobalModal";
 import { GlobalInput } from "@/components/global/GlobalInput";
 import { GlobalButton } from "@/components/global/GlobalButton";
+import { PageShell } from "@/components/global/PageShell";
 import type { ColumnDef } from "@tanstack/react-table";
 
 interface SupervisoresPageProps {
@@ -91,17 +92,15 @@ export function SupervisoresPage({ initialSupervisores }: SupervisoresPageProps)
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>Supervisores</h1>
-          <p className="text-sm" style={{ color: "var(--text-3)" }}>{supervisores.length} supervisores</p>
-        </div>
+    <PageShell
+      title="Supervisores"
+      subtitle={`${supervisores.length} supervisores`}
+      actions={
         <GlobalButton leftIcon={<Plus size={15} />} onClick={() => setCreateOpen(true)}>
           Novo Supervisor
         </GlobalButton>
-      </div>
-
+      }
+    >
       <GlobalTable data={supervisores} columns={columns} searchPlaceholder="Buscar supervisor…" emptyMessage="Nenhum supervisor cadastrado." />
 
       <GlobalModal
@@ -126,6 +125,6 @@ export function SupervisoresPage({ initialSupervisores }: SupervisoresPageProps)
           </label>
         </div>
       </GlobalModal>
-    </div>
+    </PageShell>
   );
 }

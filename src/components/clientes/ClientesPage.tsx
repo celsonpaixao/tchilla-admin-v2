@@ -7,6 +7,7 @@ import { deletarCliente } from "@/actions/cliente.actions";
 import { GlobalTable } from "@/components/global/GlobalTable";
 import { ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
+import { PageShell } from "@/components/global/PageShell";
 import { formatDate } from "@/lib/utils";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -78,12 +79,7 @@ export function ClientesPage({ initialClientes }: ClientesPageProps) {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>Clientes</h1>
-        <p className="text-sm" style={{ color: "var(--text-3)" }}>{clientes.length} clientes cadastrados</p>
-      </div>
-
+    <PageShell title="Clientes" subtitle={`${clientes.length} clientes cadastrados`}>
       <GlobalTable
         data={clientes}
         columns={columns}
@@ -100,6 +96,6 @@ export function ClientesPage({ initialClientes }: ClientesPageProps) {
         loading={isPending}
         confirmLabel="Remover"
       />
-    </div>
+    </PageShell>
   );
 }

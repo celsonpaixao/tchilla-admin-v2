@@ -10,6 +10,7 @@ import { GlobalTable } from "@/components/global/GlobalTable";
 import { GlobalDrawer } from "@/components/global/GlobalDrawer";
 import { ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
+import { PageShell } from "@/components/global/PageShell";
 import { formatCurrencyAOA, formatDate, cn } from "@/lib/utils";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -113,21 +114,20 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
   ];
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>Reservas</h1>
-          <p className="text-sm" style={{ color: "var(--text-3)" }}>{filtered.length} reservas</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Filtro de status */}
+    <PageShell
+      title="Reservas"
+      subtitle={`${filtered.length} reservas`}
+      actions={
+        <>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as ReservaStatus | "")}
-            className="text-sm px-3 py-2 rounded-lg border outline-none cursor-pointer"
-            style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
+            style={{
+              height: "var(--control-h)", padding: "0 var(--pad-x)",
+              borderRadius: "var(--r-md)", border: "1px solid var(--border)",
+              background: "var(--surface)", color: "var(--text)",
+              fontSize: "var(--font-sm)", outline: "none", cursor: "pointer",
+            }}
           >
             <option value="">Todos os status</option>
             <option value="Pendente">Pendente</option>
@@ -136,19 +136,17 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
             <option value="Concluido">Concluído</option>
           </select>
 
-          {/* View toggle */}
-          <div
-            className="flex rounded-lg overflow-hidden"
-            style={{ border: "1px solid var(--border)" }}
-          >
+          <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
             {([["table", Table], ["cards", LayoutGrid]] as const).map(([mode, Icon]) => (
               <button
                 key={mode}
                 onClick={() => setView(mode)}
-                className="px-3 py-2 cursor-pointer transition-colors"
                 style={{
+                  height: "var(--control-h)", padding: "0 10px",
+                  cursor: "pointer", transition: "background .12s",
                   background: view === mode ? "var(--blue)" : "var(--surface)",
                   color: view === mode ? "white" : "var(--text-3)",
+                  border: "none",
                 }}
                 aria-pressed={view === mode}
                 aria-label={mode === "table" ? "Visão tabela" : "Visão cards"}
@@ -157,8 +155,9 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
               </button>
             ))}
           </div>
-        </div>
-      </div>
+        </>
+      }
+    >
 
       {/* Visão Tabela */}
       {view === "table" && (
@@ -294,6 +293,6 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
         confirmLabel={confirmAction?.label ?? "Confirmar"}
         confirmVariant={confirmAction?.status === RESERVA_STATUS_CODE.Cancelado ? "danger" : "primary"}
       />
-    </div>
+    </PageShell>
   );
 }

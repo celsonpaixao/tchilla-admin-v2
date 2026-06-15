@@ -27,7 +27,7 @@ function SkeletonRow({ columns }: { columns: number }) {
   return (
     <tr>
       {Array.from({ length: columns }).map((_, i) => (
-        <td key={i} className="px-4 py-3">
+        <td key={i} style={{ height: "var(--row-h)", padding: "0 var(--pad-x)" }}>
           <div className="skeleton h-4 w-3/4" />
         </td>
       ))}
@@ -71,8 +71,11 @@ export function GlobalTable<T>({
       >
         {/* tbl-toolbar — busca integrada ao container */}
         <div
-          className="flex items-center gap-2.5 px-3 py-2.5"
-          style={{ borderBottom: "1px solid var(--border)" }}
+          style={{
+            display: "flex", alignItems: "center",
+            gap: "var(--gap)", padding: "8px var(--pad-x)",
+            borderBottom: "1px solid var(--border)",
+          }}
         >
           <div className="relative flex-1 max-w-xs">
             <Search
@@ -86,11 +89,11 @@ export function GlobalTable<T>({
               placeholder={searchPlaceholder}
               className="w-full pl-8 pr-3 outline-none transition-colors"
               style={{
-                height: 36,
+                height: "var(--control-h-sm)",
                 background: "var(--gray-50)",
                 border: "1px solid var(--border)",
                 borderRadius: "var(--r-md)",
-                fontSize: 13,
+                fontSize: "var(--font-sm)",
                 color: "var(--text)",
               }}
               onFocus={(e) => (e.target.style.borderColor = "var(--blue)")}
@@ -140,8 +143,8 @@ export function GlobalTable<T>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-12 text-center text-sm"
-                  style={{ color: "var(--text-3)" }}
+                  className="text-center"
+                  style={{ padding: "48px var(--pad-x)", fontSize: "var(--font-sm)", color: "var(--text-3)" }}
                 >
                   {emptyMessage}
                 </td>
@@ -158,8 +161,13 @@ export function GlobalTable<T>({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3 text-sm"
-                      style={{ color: "var(--text)" }}
+                      style={{
+                        height: "var(--row-h)",
+                        padding: "0 var(--pad-x)",
+                        fontSize: "var(--font-sm)",
+                        color: "var(--text)",
+                        verticalAlign: "middle",
+                      }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
@@ -174,23 +182,24 @@ export function GlobalTable<T>({
       {/* tbl-foot — conforme DS */}
       {totalRows > ps && (
         <div
-          className="flex items-center gap-3 px-3.5 py-2.5"
           style={{
+            display: "flex", alignItems: "center", gap: "var(--gap)",
+            padding: "7px var(--pad-x)",
             borderTop: "1px solid var(--border)",
             background: "var(--surface-2)",
-            fontSize: 12.5,
+            fontSize: "var(--font-sm)",
             color: "var(--text-3)",
           }}
         >
           <p>
             {pageIndex * ps + 1}–{Math.min((pageIndex + 1) * ps, totalRows)} de {totalRows}
           </p>
-          <div className="flex items-center gap-1 ml-auto">
+          <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: "auto" }}>
             <button
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-40"
-              style={{ color: "var(--text-2)" }}
+              className="flex items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-40"
+              style={{ width: "var(--control-h-sm)", height: "var(--control-h-sm)", color: "var(--text-2)" }}
             >
               <ChevronLeft size={16} />
             </button>
@@ -200,14 +209,14 @@ export function GlobalTable<T>({
                 <button
                   key={page}
                   onClick={() => table.setPageIndex(page)}
-                  className={cn(
-                    "w-8 h-8 flex items-center justify-center rounded-lg text-xs font-medium transition-colors cursor-pointer"
-                  )}
-                  style={
-                    pageIndex === page
+                  className={cn("flex items-center justify-center rounded-lg font-medium transition-colors cursor-pointer")}
+                  style={{
+                    width: "var(--control-h-sm)", height: "var(--control-h-sm)",
+                    fontSize: "var(--font-sm)",
+                    ...(pageIndex === page
                       ? { background: "var(--blue)", color: "var(--navy)", fontWeight: 700 }
-                      : { color: "var(--text-2)" }
-                  }
+                      : { color: "var(--text-2)" }),
+                  }}
                 >
                   {page + 1}
                 </button>
@@ -216,8 +225,8 @@ export function GlobalTable<T>({
             <button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-40"
-              style={{ color: "var(--text-2)" }}
+              className="flex items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-40"
+              style={{ width: "var(--control-h-sm)", height: "var(--control-h-sm)", color: "var(--text-2)" }}
             >
               <ChevronRight size={16} />
             </button>

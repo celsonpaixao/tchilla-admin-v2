@@ -6,6 +6,7 @@ import type { ClientesData } from "@/types/client.types";
 import { enviarCampanha } from "@/actions/campanha.actions";
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { GlobalButton } from "@/components/global/GlobalButton";
+import { PageShell } from "@/components/global/PageShell";
 
 interface CampanhasPageProps {
   clientes: ClientesData[];
@@ -44,14 +45,7 @@ export function CampanhasPage({ clientes }: CampanhasPageProps) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>Campanhas Push</h1>
-        <p className="text-sm" style={{ color: "var(--text-3)" }}>
-          Envie notificações push para usuários específicos
-        </p>
-      </div>
-
+    <PageShell title="Campanhas Push" subtitle="Envie notificações push para usuários específicos">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Seleção de usuário */}
         <div
@@ -157,6 +151,6 @@ export function CampanhasPage({ clientes }: CampanhasPageProps) {
           </GlobalButton>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
