@@ -441,3 +441,6 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 1px 3px rgba(0,0,0,.20);
   cursor: pointer;
 }
+
+/* ─── Dialog / Modal — animações geridas por Framer Motion ─── */
+/* Os componentes GlobalModal e GlobalDrawer usam motion + AnimatePresence */
