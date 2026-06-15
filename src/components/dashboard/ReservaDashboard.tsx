@@ -5,7 +5,7 @@ import { CalendarCheck, DollarSign, CheckCircle, XCircle, Eye, Check, X } from "
 import type { AgendamentoMetrics } from "@/types/metrics.types";
 import type { ReservaInterface } from "@/types/reserva.types";
 import { RESERVA_STATUS_CODE } from "@/types/reserva.types";
-import { atualizarStatusReserva } from "@/actions/reserva.actions";
+import { atualizarStatusReserva, fetchReservaById } from "@/actions/reserva.actions";
 import { StatusBadge } from "@/components/global/StatusBadge";
 import { GlobalDrawer } from "@/components/global/GlobalDrawer";
 import { ConfirmModal } from "@/components/global/GlobalModal";
@@ -13,7 +13,7 @@ import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { KPICard } from "@/components/global/KPICard";
 import { PageShell } from "@/components/global/PageShell";
 import { formatCurrencyAOA, formatDatetime } from "@/lib/utils";
-import { ReservaDrawerContent } from "@/components/reservas/ReservaDrawerContent";
+import { ReservaDrawerContent, DrawerSkeleton } from "@/components/reservas/ReservaDrawerContent";
 
 
 interface ReservaDashboardProps {
@@ -24,9 +24,22 @@ interface ReservaDashboardProps {
 export function ReservaDashboard({ metricas, reservasPendentes: initialPendentes }: ReservaDashboardProps) {
   const [pendentes, setPendentes] = useState(initialPendentes);
   const [selected, setSelected] = useState<ReservaInterface | null>(null);
+  const [detail, setDetail] = useState<ReservaInterface | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ id: number; status: number; label: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function openDrawer(reserva: ReservaInterface) {
+    setSelected(reserva);
+    setDetail(null);
+    setDetailLoading(true);
+    setDrawerOpen(true);
+    fetchReservaById(reserva.id).then((res) => {
+      if (res.success) setDetail(res.data);
+      setDetailLoading(false);
+    });
+  }
 
   function handleAction(reserva: ReservaInterface, statusCode: number, label: string) {
     setConfirmAction({ id: reserva.id, status: statusCode, label });
@@ -160,7 +173,7 @@ export function ReservaDashboard({ metricas, reservasPendentes: initialPendentes
                 {/* Ações */}
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button
-                    onClick={() => { setSelected(reserva); setDrawerOpen(true); }}
+                    onClick={() => openDrawer(reserva)}
                     className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
                     style={{ color: "var(--text-3)" }}
                     title="Ver detalhes"
@@ -220,7 +233,11 @@ export function ReservaDashboard({ metricas, reservasPendentes: initialPendentes
           ) : null
         }
       >
-        {selected && <ReservaDrawerContent reserva={selected} />}
+        {detailLoading ? (
+          <DrawerSkeleton />
+        ) : detail ? (
+          <ReservaDrawerContent reserva={detail} />
+        ) : null}
       </GlobalDrawer>
 
       {/* Modal de confirmação */}

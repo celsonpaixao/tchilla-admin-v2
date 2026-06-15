@@ -4,7 +4,7 @@ import { Calendar, Table, LayoutGrid, Filter, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import type { ReservaInterface, ReservaStatus } from "@/types/reserva.types";
 import { RESERVA_STATUS_CODE } from "@/types/reserva.types";
-import { atualizarStatusReserva } from "@/actions/reserva.actions";
+import { atualizarStatusReserva, fetchReservaById } from "@/actions/reserva.actions";
 import { StatusBadge } from "@/components/global/StatusBadge";
 import { GlobalTable } from "@/components/global/GlobalTable";
 import { GlobalDrawer } from "@/components/global/GlobalDrawer";
@@ -13,7 +13,7 @@ import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { PageShell } from "@/components/global/PageShell";
 import { GlobalSelect } from "@/components/global/GlobalSelect";
 import { formatCurrencyAOA, formatDate, cn } from "@/lib/utils";
-import { ReservaDrawerContent } from "@/components/reservas/ReservaDrawerContent";
+import { ReservaDrawerContent, DrawerSkeleton } from "@/components/reservas/ReservaDrawerContent";
 import type { ColumnDef } from "@tanstack/react-table";
 
 type ViewMode = "table" | "cards";
@@ -26,10 +26,23 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
   const [reservas, setReservas] = useState(initialReservas);
   const [view, setView] = useState<ViewMode>("table");
   const [selected, setSelected] = useState<ReservaInterface | null>(null);
+  const [detail, setDetail] = useState<ReservaInterface | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ id: number; status: number; label: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<ReservaStatus | "">("");
   const [isPending, startTransition] = useTransition();
+
+  function openDrawer(reserva: ReservaInterface) {
+    setSelected(reserva);
+    setDetail(null);
+    setDetailLoading(true);
+    setDrawerOpen(true);
+    fetchReservaById(reserva.id).then((res) => {
+      if (res.success) setDetail(res.data);
+      setDetailLoading(false);
+    });
+  }
 
   const filtered = statusFilter
     ? reservas.filter((r) => r.status === statusFilter)
@@ -105,7 +118,7 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
       header: "",
       cell: ({ row }) => (
         <button
-          onClick={() => { setSelected(row.original); setDrawerOpen(true); }}
+          onClick={() => openDrawer(row.original)}
           className="text-xs px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
           style={{ background: "var(--gray-100)", color: "var(--text-2)" }}
         >
@@ -180,7 +193,7 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
               <div
                 key={reserva.id}
                 className="card p-4 space-y-3 cursor-pointer transition-shadow hover:shadow-md"
-                onClick={() => { setSelected(reserva); setDrawerOpen(true); }}
+                onClick={() => openDrawer(reserva)}
               >
                 <div className="flex items-start justify-between gap-2">
                   <GlobalUserAvatarName name={reserva.cliente.nome} photo={reserva.cliente.foto} />
@@ -239,7 +252,11 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
           ) : null
         }
       >
-        {selected && <ReservaDrawerContent reserva={selected} />}
+        {detailLoading ? (
+          <DrawerSkeleton />
+        ) : detail ? (
+          <ReservaDrawerContent reserva={detail} />
+        ) : null}
       </GlobalDrawer>
 
       <ConfirmModal

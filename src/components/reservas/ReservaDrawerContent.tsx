@@ -195,6 +195,42 @@ export function ReservaDrawerContent({ reserva: r }: Props) {
   );
 }
 
+export function DrawerSkeleton() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* avatar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="skeleton" style={{ width: 40, height: 40, borderRadius: "50%", flexShrink: 0 }} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="skeleton" style={{ height: 13, width: "55%", borderRadius: 6 }} />
+          <div className="skeleton" style={{ height: 11, width: "70%", borderRadius: 6 }} />
+        </div>
+      </div>
+      <div className="skeleton" style={{ height: 1, borderRadius: 1 }} />
+      {/* grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            <div className="skeleton" style={{ height: 10, width: "40%", borderRadius: 4 }} />
+            <div className="skeleton" style={{ height: 13, width: "75%", borderRadius: 4 }} />
+          </div>
+        ))}
+      </div>
+      <div className="skeleton" style={{ height: 1, borderRadius: 1 }} />
+      {/* responsaveis */}
+      {[1, 2].map((i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="skeleton" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 5 }}>
+            <div className="skeleton" style={{ height: 12, width: "50%", borderRadius: 4 }} />
+            <div className="skeleton" style={{ height: 10, width: "30%", borderRadius: 4 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function InfoRow({
   icon,
   label,
