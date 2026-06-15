@@ -92,10 +92,9 @@ function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: Si
         borderBottom: "1px solid rgba(255,255,255,.08)",
         flexShrink: 0,
       }}>
-        {/* símbolo — branco-lacorosa: branco c/ detalhe rosa, ideal no fundo navy */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/assets/vectores/tchilla-simbolo-branco-lacorosa.svg"
+          src="/assets/tchilla-simbolo-branco-lacorosa.png"
           alt="Tchilla"
           style={{ height: 30, width: "auto", objectFit: "contain", flexShrink: 0 }}
         />

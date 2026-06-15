@@ -18,20 +18,17 @@ export default async function DashboardLayout({
 
   return (
     <DashboardProviders user={user}>
-      {/* Sidebar */}
+      {/* Sidebar — position: fixed, fora do fluxo */}
       <AppSidebar user={user} />
 
-      {/* Topbar */}
-      <Topbar user={user} />
-
-      {/* Conteúdo principal */}
+      {/* Área de conteúdo — ocupa só o espaço à direita da sidebar */}
       <main
-        className="min-h-screen"
-        style={{
-          paddingLeft: "var(--sidebar-width)",
-          paddingTop: "var(--topbar-height)",
-        }}
+        className="min-h-screen flex flex-col"
+        style={{ paddingLeft: "var(--sidebar-width)" }}
       >
+        {/* Topbar dentro do main → sticky apenas na área de conteúdo, não cobre a sidebar */}
+        <Topbar user={user} />
+
         {/* Skip link para acessibilidade */}
         <a
           href="#main-content"
@@ -41,7 +38,7 @@ export default async function DashboardLayout({
           Ir para o conteúdo
         </a>
 
-        <div id="main-content" className="p-6">
+        <div id="main-content" className="flex-1 p-6">
           {children}
         </div>
       </main>
