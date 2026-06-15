@@ -1,17 +1,28 @@
 import type { Timestamp } from "firebase/firestore";
 
-export interface FirebaseNotificationData {
-  reservaId: string;
-  imagem: string;
-  lida: boolean;
-  mensagem: string;
-  tipo: string;
-  titulo: string;
-  userId: number;
+/** Sub-object `data` inside each Firestore `notificacoes` document */
+export interface NotificationPayload {
+  reservaId?: string;
+  tipo?: string;
+  tipoEvento?: string;
+  dataInicio?: string;
+  valorTotal?: string;
+  novoStatus?: string;
+  clienteId?: string;
+  clienteName?: string;
+  route?: string;
 }
 
+/** Matches the actual Firestore document structure written by Firebase Functions */
 export interface FirebaseNotification {
   id: string;
+  userId: number;
+  titulo: string;
+  mensagem: string;
+  tipo: string;
+  lida: boolean;
   criadoEm: Timestamp;
-  data: FirebaseNotificationData;
+  deletadoEm: Timestamp | null;
+  imagem: string | null;
+  data: NotificationPayload;
 }

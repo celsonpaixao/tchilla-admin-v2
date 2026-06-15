@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useUserStore } from "@/stores/userStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useSupervisorNotifications } from "@/hooks/useSupervisorNotifications";
 import type { UsuarioInterface } from "@/types/user.types";
 
 interface DashboardProvidersProps {
@@ -12,7 +12,7 @@ interface DashboardProvidersProps {
 }
 
 function NotificationListener({ userId }: { userId: number }) {
-  useNotifications(userId);
+  useSupervisorNotifications(userId);
   return null;
 }
 

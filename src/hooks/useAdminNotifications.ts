@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import {
-  collection, query, where, orderBy, onSnapshot, updateDoc, doc,
+  collection, query, orderBy, limit, onSnapshot, updateDoc, doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useNotificationStore } from "@/stores/notificationStore";
@@ -14,8 +14,11 @@ const SOUND_MAP: Record<string, string> = {
   default: SOUNDS.INFO,
 };
 
-/** Escuta notificações de um usuário específico (app mobile/parceiro). */
-export function useNotifications(userId?: number) {
+/**
+ * Escuta TODAS as notificações do Firestore (sem filtro de userId).
+ * Usado pelo painel admin/supervisor para ver toda a atividade do sistema.
+ */
+export function useAdminNotifications() {
   const { setNotifications, addNotifiedId, hasBeenNotified } = useNotificationStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -35,12 +38,10 @@ export function useNotifications(userId?: number) {
   }
 
   useEffect(() => {
-    if (!userId) return;
-
     const q = query(
       collection(db, "notificacoes"),
-      where("userId", "==", userId),
-      orderBy("criadoEm", "desc")
+      orderBy("criadoEm", "desc"),
+      limit(50)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -60,7 +61,7 @@ export function useNotifications(userId?: number) {
         } satisfies FirebaseNotification;
       });
 
-      setNotifications(notifications, false);
+      setNotifications(notifications, snapshot.docs.length === 50);
 
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
@@ -75,7 +76,7 @@ export function useNotifications(userId?: number) {
     });
 
     return () => unsubscribe();
-  }, [userId]);
+  }, []);
 
   return { markAsReadFirestore };
 }
