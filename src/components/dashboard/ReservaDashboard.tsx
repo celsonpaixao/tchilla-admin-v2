@@ -13,6 +13,7 @@ import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { KPICard } from "@/components/global/KPICard";
 import { PageShell } from "@/components/global/PageShell";
 import { formatCurrencyAOA, formatDatetime } from "@/lib/utils";
+import { ReservaDrawerContent } from "@/components/reservas/ReservaDrawerContent";
 
 
 interface ReservaDashboardProps {
@@ -219,47 +220,7 @@ export function ReservaDashboard({ metricas, reservasPendentes: initialPendentes
           ) : null
         }
       >
-        {selected && (
-          <div className="space-y-5">
-            <GlobalUserAvatarName
-              name={selected.cliente.nome}
-              photo={selected.cliente.foto}
-              subtitle={selected.cliente.email}
-              size="md"
-            />
-            <div className="space-y-3">
-              {[
-                { label: "Local", value: selected.local },
-                { label: "Data início", value: formatDatetime(selected.dataInicio) },
-                { label: "Data fim", value: formatDatetime(selected.dataFim) },
-                { label: "Valor", value: formatCurrencyAOA(selected.precoTotal) },
-                { label: "Capacidade", value: `${selected.capacidade} pessoas` },
-                { label: "Pago", value: selected.pago ? "Sim" : "Não" },
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs" style={{ color: "var(--text-3)" }}>{item.label}</p>
-                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.value}</p>
-                </div>
-              ))}
-            </div>
-            {selected.servicos.length > 0 && (
-              <div>
-                <p className="text-xs mb-2" style={{ color: "var(--text-3)" }}>Serviços</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selected.servicos.map((s) => (
-                    <span
-                      key={s.id}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}
-                    >
-                      {s.nome}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {selected && <ReservaDrawerContent reserva={selected} />}
       </GlobalDrawer>
 
       {/* Modal de confirmação */}

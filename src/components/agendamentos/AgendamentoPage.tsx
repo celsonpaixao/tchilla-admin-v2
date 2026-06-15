@@ -13,6 +13,7 @@ import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { PageShell } from "@/components/global/PageShell";
 import { GlobalSelect } from "@/components/global/GlobalSelect";
 import { formatCurrencyAOA, formatDate, cn } from "@/lib/utils";
+import { ReservaDrawerContent } from "@/components/reservas/ReservaDrawerContent";
 import type { ColumnDef } from "@tanstack/react-table";
 
 type ViewMode = "table" | "cards";
@@ -238,47 +239,7 @@ export function AgendamentoPage({ initialReservas }: AgendamentoPageProps) {
           ) : null
         }
       >
-        {selected && (
-          <div className="space-y-5">
-            <GlobalUserAvatarName
-              name={selected.cliente.nome}
-              photo={selected.cliente.foto}
-              subtitle={selected.cliente.telefone}
-              size="md"
-            />
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Status", value: <StatusBadge status={selected.status} /> },
-                { label: "Valor", value: formatCurrencyAOA(selected.precoTotal) },
-                { label: "Início", value: formatDate(selected.dataInicio) },
-                { label: "Fim", value: formatDate(selected.dataFim) },
-                { label: "Capacidade", value: `${selected.capacidade} pessoas` },
-                { label: "Pago", value: selected.pago ? "Sim" : "Não" },
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs mb-1" style={{ color: "var(--text-3)" }}>{item.label}</p>
-                  <div className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.value}</div>
-                </div>
-              ))}
-            </div>
-            <div>
-              <p className="text-xs mb-1" style={{ color: "var(--text-3)" }}>Local</p>
-              <p className="text-sm" style={{ color: "var(--text)" }}>{selected.local}</p>
-            </div>
-            {selected.servicos.length > 0 && (
-              <div>
-                <p className="text-xs mb-2" style={{ color: "var(--text-3)" }}>Serviços</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selected.servicos.map((s) => (
-                    <span key={s.id} className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}>
-                      {s.nome}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {selected && <ReservaDrawerContent reserva={selected} />}
       </GlobalDrawer>
 
       <ConfirmModal
