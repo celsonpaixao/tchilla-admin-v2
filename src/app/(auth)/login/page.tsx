@@ -33,6 +33,14 @@ export default function LoginPage() {
           return;
         }
 
+        // Pedir permissão de notificação imediatamente após login
+        // O token FCM será registado pelo usePushNotifications no dashboard
+        if (typeof window !== "undefined" && "Notification" in window) {
+          if (Notification.permission === "default") {
+            await Notification.requestPermission();
+          }
+        }
+
         toast.success("Bem-vindo de volta!");
         router.push(ROUTES.HOME);
         router.refresh();

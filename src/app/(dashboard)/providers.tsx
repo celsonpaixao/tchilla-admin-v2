@@ -4,6 +4,7 @@ import { useUserStore } from "@/stores/userStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useThemeStore } from "@/stores/themeStore";
 import { useSupervisorNotifications } from "@/hooks/useSupervisorNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import type { UsuarioInterface } from "@/types/user.types";
 
 interface DashboardProvidersProps {
@@ -13,6 +14,7 @@ interface DashboardProvidersProps {
 
 function NotificationListener({ userId }: { userId: number }) {
   useSupervisorNotifications(userId);
+  usePushNotifications(userId);
   return null;
 }
 
