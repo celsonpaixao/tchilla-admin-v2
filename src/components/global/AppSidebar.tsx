@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
   CreditCard, Settings, LogOut, Loader2, Menu, X,
-  Tag, Megaphone, BarChart3,
+  Tag, Megaphone, BarChart3, Ticket,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
@@ -40,6 +40,7 @@ function buildNav(unreadCount: number): NavGroup[] {
         { label: "Categorias",   href: ROUTES.GESTAO.CATEGORIAS,  icon: <Tag size={17} /> },
         { label: "Supervisores", href: ROUTES.GESTAO.SUPERVISORES, icon: <UserCheck size={17} /> },
         { label: "Campanhas",    href: ROUTES.GESTAO.CAMPANHAS,    icon: <Megaphone size={17} /> },
+        { label: "Cupons",       href: ROUTES.GESTAO.CUPONS,       icon: <Ticket size={17} /> },
       ],
     },
     {
