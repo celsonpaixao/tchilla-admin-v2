@@ -4,6 +4,7 @@ export interface SubCategoryData {
   descricao: string;
   tipo: number; // 1=Serviço, 2=Espaço
   foto: string;
+  slug: string;
   categoriaId: number;
 }
 
@@ -32,5 +33,15 @@ export interface CreateSubCategoryRequest {
   Descricao: string;
   Tipo: number;
   CategoriaId: number;
+  Slug: string;
+  Foto?: File;
+}
+
+export interface UpdateSubCategoryRequest {
+  Id: number;
+  Nome: string;
+  Descricao: string;
+  Slug: string;
+  Tipo: number;
   Foto?: File;
 }

@@ -6,37 +6,61 @@ import NextImage from "next/image";
 import type { CategoryData, SubCategoryData } from "@/types/category.types";
 import {
   criarCategoria, atualizarCategoria, deletarCategoria,
-  fetchSubcategorias, criarSubcategoria, deletarSubcategoria,
+  fetchSubcategorias, criarSubcategoria, atualizarSubcategoria, deletarSubcategoria,
 } from "@/actions/categoria.actions";
 import { GlobalModal, ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalInput } from "@/components/global/GlobalInput";
+import { GlobalSelect } from "@/components/global/GlobalSelect";
 import { GlobalButton } from "@/components/global/GlobalButton";
+import { GlobalImageUpload } from "@/components/global/GlobalImageUpload";
 import { PageShell } from "@/components/global/PageShell";
 
 interface CategoryPageProps {
   initialCategorias: CategoryData[];
+  slugOptions: string[];
 }
 
-export function CategoryPage({ initialCategorias }: CategoryPageProps) {
+
+type SubModal =
+  | { mode: "create"; cat: CategoryData }
+  | { mode: "edit"; sub: SubCategoryData; cat: CategoryData }
+  | null;
+
+export function CategoryPage({ initialCategorias, slugOptions }: CategoryPageProps) {
   const [categorias, setCategorias] = useState(initialCategorias);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [subcategorias, setSubcategorias] = useState<Record<number, SubCategoryData[]>>({});
   const [loadingSubId, setLoadingSubId] = useState<number | null>(null);
 
+  // Category modal
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<CategoryData | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CategoryData | null>(null);
-  const [createSubFor, setCreateSubFor] = useState<CategoryData | null>(null);
 
-  const [nome, setNome] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [foto, setFoto] = useState<File | null>(null);
-  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  // Category form fields
+  const [catNome, setCatNome] = useState("");
+  const [catDescricao, setCatDescricao] = useState("");
+  const [catFoto, setCatFoto] = useState<File | null>(null);
+
+  // Subcategory modal
+  const [subModal, setSubModal] = useState<SubModal>(null);
+  const [deleteSub, setDeleteSub] = useState<SubCategoryData | null>(null);
+
+  // Subcategory form fields
+  const [subNome, setSubNome] = useState("");
+  const [subDescricao, setSubDescricao] = useState("");
+  const [subSlug, setSubSlug] = useState("");
+  const [subFoto, setSubFoto] = useState<File | null>(null);
+  const [subTipo, setSubTipo] = useState(1);
 
   const [isPending, startTransition] = useTransition();
 
-  function resetForm() {
-    setNome(""); setDescricao(""); setFoto(null); setFotoPreview(null);
+  function resetCatForm() {
+    setCatNome(""); setCatDescricao(""); setCatFoto(null);
+  }
+
+  function resetSubForm() {
+    setSubNome(""); setSubDescricao(""); setSubSlug(""); setSubFoto(null); setSubTipo(1);
   }
 
   async function toggleExpand(cat: CategoryData) {
@@ -50,39 +74,66 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
     }
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFoto(file);
-    setFotoPreview(URL.createObjectURL(file));
+  function openEditCat(cat: CategoryData) {
+    setEditTarget(cat);
+    setCatNome(cat.nome);
+    setCatDescricao(cat.descricao);
+    setCatFoto(null);
   }
 
+  function openCreateSub(cat: CategoryData) {
+    resetSubForm();
+    setSubModal({ mode: "create", cat });
+  }
+
+  function openEditSub(sub: SubCategoryData, cat: CategoryData) {
+    setSubNome(sub.nome);
+    setSubDescricao(sub.descricao);
+    setSubSlug(sub.slug ?? "");
+    setSubTipo(sub.tipo);
+    setSubFoto(null);
+    setSubModal({ mode: "edit", sub, cat });
+  }
+
+  // ── Category handlers ─────────────────────────────────────
+
   function handleCreate() {
-    if (!nome.trim()) return;
+    if (!catNome.trim()) return;
     startTransition(async () => {
       const fd = new FormData();
-      fd.append("Nome", nome);
-      fd.append("Descricao", descricao);
-      if (foto) fd.append("Foto", foto);
+      fd.append("Nome", catNome);
+      fd.append("Descricao", catDescricao);
+      if (catFoto) fd.append("Foto", catFoto);
       const result = await criarCategoria(fd);
       if (result.success) {
         toast.success("Categoria criada!");
         setCategorias((prev) => [...prev, result.data]);
-        setCreateOpen(false); resetForm();
+        setCreateOpen(false); resetCatForm();
       } else {
         toast.error(result.error ?? "Erro ao criar.");
       }
     });
   }
 
-  function handleEdit() {
-    if (!editTarget || !nome.trim()) return;
+  function handleEditCat() {
+    if (!editTarget || !catNome.trim()) return;
     startTransition(async () => {
-      const result = await atualizarCategoria(editTarget.id, nome, descricao);
+      const fd = new FormData();
+      fd.append("Id", String(editTarget.id));
+      fd.append("Nome", catNome);
+      fd.append("Descricao", catDescricao);
+      if (catFoto) fd.append("Foto", catFoto);
+      const result = await atualizarCategoria(fd);
       if (result.success) {
         toast.success("Categoria atualizada!");
-        setCategorias((prev) => prev.map((c) => c.id === editTarget.id ? { ...c, nome, descricao } : c));
-        setEditTarget(null); resetForm();
+        setCategorias((prev) =>
+          prev.map((c) =>
+            c.id === editTarget.id
+              ? { ...c, nome: catNome, descricao: catDescricao }
+              : c
+          )
+        );
+        setEditTarget(null); resetCatForm();
       } else {
         toast.error(result.error ?? "Erro ao atualizar.");
       }
@@ -103,35 +154,138 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
     });
   }
 
+  // ── Subcategory handlers ──────────────────────────────────
+
   function handleCreateSub() {
-    if (!createSubFor || !nome.trim()) return;
+    if (subModal?.mode !== "create" || !subNome.trim()) return;
+    const cat = subModal.cat;
     startTransition(async () => {
       const fd = new FormData();
-      fd.append("Nome", nome);
-      fd.append("Descricao", descricao);
-      fd.append("Tipo", "1");
-      fd.append("CategoriaId", String(createSubFor.id));
-      if (foto) fd.append("Foto", foto);
+      fd.append("Nome", subNome);
+      fd.append("Descricao", subDescricao);
+      fd.append("Slug", subSlug);
+      fd.append("Tipo", String(subTipo));
+      fd.append("CategoriaId", String(cat.id));
+      if (subFoto) fd.append("Foto", subFoto);
       const result = await criarSubcategoria(fd);
       if (result.success) {
         toast.success("Subcategoria criada!");
         setSubcategorias((prev) => ({
           ...prev,
-          [createSubFor.id]: [...(prev[createSubFor.id] ?? []), result.data],
+          [cat.id]: [...(prev[cat.id] ?? []), result.data],
         }));
-        setCreateSubFor(null); resetForm();
+        setSubModal(null); resetSubForm();
       } else {
         toast.error(result.error ?? "Erro ao criar.");
       }
     });
   }
 
+  function handleEditSub() {
+    if (subModal?.mode !== "edit" || !subNome.trim()) return;
+    const { sub, cat } = subModal;
+    startTransition(async () => {
+      const fd = new FormData();
+      fd.append("Id", String(sub.id));
+      fd.append("Nome", subNome);
+      fd.append("Descricao", subDescricao);
+      fd.append("Slug", subSlug);
+      fd.append("Tipo", String(subTipo));
+      if (subFoto) fd.append("Foto", subFoto);
+      const result = await atualizarSubcategoria(fd);
+      if (result.success) {
+        toast.success("Subcategoria atualizada!");
+        setSubcategorias((prev) => ({
+          ...prev,
+          [cat.id]: (prev[cat.id] ?? []).map((s) =>
+            s.id === sub.id
+              ? { ...s, nome: subNome, descricao: subDescricao, slug: subSlug, tipo: subTipo }
+              : s
+          ),
+        }));
+        setSubModal(null); resetSubForm();
+      } else {
+        toast.error(result.error ?? "Erro ao atualizar.");
+      }
+    });
+  }
+
+  function handleDeleteSub() {
+    if (!deleteSub) return;
+    startTransition(async () => {
+      const result = await deletarSubcategoria(deleteSub.id);
+      if (result.success) {
+        toast.success("Subcategoria removida!");
+        setSubcategorias((prev) => {
+          const next = { ...prev };
+          for (const key in next) {
+            next[key] = next[key].filter((s) => s.id !== deleteSub.id);
+          }
+          return next;
+        });
+        setDeleteSub(null);
+      } else {
+        toast.error(result.error ?? "Erro ao remover.");
+      }
+    });
+  }
+
+  // ── Textarea style helpers ───────────────────────────────
+
+  const textareaStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "8px var(--pad-x)",
+    background: "var(--surface)",
+    color: "var(--text)",
+    border: "1px solid var(--border-strong)",
+    borderRadius: "var(--r-md)",
+    fontFamily: "inherit",
+    fontSize: "var(--font-ui)",
+    outline: "none",
+    resize: "none",
+    transition: "border-color .12s, box-shadow .12s",
+  };
+
+  const textareaHandlers = {
+    onFocus: (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      e.target.style.borderColor = "var(--blue)";
+      e.target.style.boxShadow = "0 0 0 3px var(--ring)";
+    },
+    onBlur: (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      e.target.style.borderColor = "var(--border-strong)";
+      e.target.style.boxShadow = "none";
+    },
+    onMouseEnter: (e: React.MouseEvent<HTMLTextAreaElement>) => {
+      if (document.activeElement !== e.currentTarget)
+        e.currentTarget.style.borderColor = "var(--gray-400)";
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLTextAreaElement>) => {
+      if (document.activeElement !== e.currentTarget)
+        e.currentTarget.style.borderColor = "var(--border-strong)";
+    },
+  };
+
+  // ── Render ────────────────────────────────────────────────
+
+  const subModalTitle =
+    subModal?.mode === "create"
+      ? `Nova Subcategoria — ${subModal.cat.nome}`
+      : subModal?.mode === "edit"
+      ? `Editar Subcategoria — ${subModal.sub.nome}`
+      : "";
+
+  const subModalAction = subModal?.mode === "create" ? handleCreateSub : handleEditSub;
+  const subModalLabel = subModal?.mode === "create" ? "Criar" : "Salvar";
+
   return (
     <PageShell
       title="Categorias"
       subtitle={`${categorias.length} categorias cadastradas`}
       actions={
-        <GlobalButton leftIcon={<Plus size={15} />} onClick={() => { resetForm(); setCreateOpen(true); }}>
+        <GlobalButton
+          leftIcon={<Plus size={15} />}
+          onClick={() => { resetCatForm(); setCreateOpen(true); }}
+        >
           Nova Categoria
         </GlobalButton>
       }
@@ -144,11 +298,14 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
               onClick={() => toggleExpand(cat)}
             >
               {cat.foto ? (
-                <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  <NextImage src={cat.foto} alt={cat.nome} width={40} height={40} className="object-cover" />
+                <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 relative">
+                  <NextImage src={cat.foto} alt={cat.nome} fill className="object-cover" sizes="40px" />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "var(--blue-50)", color: "var(--blue-600)" }}>
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: "var(--blue-50)", color: "var(--blue-600)" }}
+                >
                   <ImageIcon size={16} />
                 </div>
               )}
@@ -158,7 +315,7 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={(e) => { e.stopPropagation(); setEditTarget(cat); setNome(cat.nome); setDescricao(cat.descricao); }}
+                  onClick={(e) => { e.stopPropagation(); openEditCat(cat); }}
                   className="w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer"
                   style={{ color: "var(--text-3)" }}
                   aria-label="Editar categoria"
@@ -173,7 +330,10 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
                 >
                   <Trash2 size={13} />
                 </button>
-                {expandedId === cat.id ? <ChevronUp size={14} style={{ color: "var(--text-3)" }} /> : <ChevronDown size={14} style={{ color: "var(--text-3)" }} />}
+                {expandedId === cat.id
+                  ? <ChevronUp size={14} style={{ color: "var(--text-3)" }} />
+                  : <ChevronDown size={14} style={{ color: "var(--text-3)" }} />
+                }
               </div>
             </div>
 
@@ -181,11 +341,14 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
               <div className="border-t" style={{ borderColor: "var(--border)", background: "var(--gray-25)" }}>
                 <div className="p-4 space-y-2">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--text-3)" }}>
+                    <p
+                      className="text-xs font-semibold uppercase tracking-wide"
+                      style={{ color: "var(--text-3)" }}
+                    >
                       Subcategorias
                     </p>
                     <button
-                      onClick={() => { resetForm(); setCreateSubFor(cat); }}
+                      onClick={() => openCreateSub(cat)}
                       className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg cursor-pointer"
                       style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}
                     >
@@ -195,17 +358,61 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
 
                   {loadingSubId === cat.id ? (
                     <div className="space-y-2">
-                      {[1,2].map((i) => <div key={i} className="skeleton h-8 rounded-lg" />)}
+                      {[1, 2].map((i) => <div key={i} className="skeleton h-8 rounded-lg" />)}
                     </div>
                   ) : (subcategorias[cat.id] ?? []).length === 0 ? (
-                    <p className="text-xs text-center py-4" style={{ color: "var(--text-3)" }}>Nenhuma subcategoria</p>
+                    <p className="text-xs text-center py-4" style={{ color: "var(--text-3)" }}>
+                      Nenhuma subcategoria
+                    </p>
                   ) : (
                     (subcategorias[cat.id] ?? []).map((sub) => (
-                      <div key={sub.id} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-                        <p className="flex-1 text-sm" style={{ color: "var(--text)" }}>{sub.nome}</p>
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}>
+                      <div
+                        key={sub.id}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                      >
+                        {sub.foto ? (
+                          <div className="w-7 h-7 rounded-md overflow-hidden flex-shrink-0 relative">
+                            <NextImage src={sub.foto} alt={sub.nome} fill className="object-cover" sizes="28px" />
+                          </div>
+                        ) : (
+                          <div
+                            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+                            style={{ background: "var(--gray-100)", color: "var(--text-3)" }}
+                          >
+                            <ImageIcon size={12} />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{sub.nome}</p>
+                          {sub.slug && (
+                            <p className="text-xs font-mono" style={{ color: "var(--text-3)" }}>{sub.slug}</p>
+                          )}
+                        </div>
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+                          style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}
+                        >
                           {sub.tipo === 1 ? "Serviço" : "Espaço"}
                         </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openEditSub(sub, cat)}
+                            className="w-6 h-6 flex items-center justify-center rounded cursor-pointer"
+                            style={{ color: "var(--text-3)" }}
+                            aria-label="Editar subcategoria"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteSub(sub)}
+                            className="w-6 h-6 flex items-center justify-center rounded cursor-pointer"
+                            style={{ color: "var(--danger-fg)" }}
+                            aria-label="Remover subcategoria"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -223,105 +430,156 @@ export function CategoryPage({ initialCategorias }: CategoryPageProps) {
         )}
       </div>
 
-      {/* Modal Criar/Editar Categoria */}
+      {/* ── Modal Criar / Editar Categoria ── */}
       <GlobalModal
         open={createOpen || !!editTarget}
-        onOpenChange={(o) => { if (!o) { setCreateOpen(false); setEditTarget(null); resetForm(); } }}
+        onOpenChange={(o) => {
+          if (!o) { setCreateOpen(false); setEditTarget(null); resetCatForm(); }
+        }}
         title={editTarget ? "Editar Categoria" : "Nova Categoria"}
         size="sm"
         footer={
           <>
-            <GlobalButton variant="outline" onClick={() => { setCreateOpen(false); setEditTarget(null); resetForm(); }}>Cancelar</GlobalButton>
-            <GlobalButton onClick={editTarget ? handleEdit : handleCreate} loading={isPending}>
+            <GlobalButton
+              variant="outline"
+              onClick={() => { setCreateOpen(false); setEditTarget(null); resetCatForm(); }}
+            >
+              Cancelar
+            </GlobalButton>
+            <GlobalButton onClick={editTarget ? handleEditCat : handleCreate} loading={isPending}>
               {editTarget ? "Salvar" : "Criar"}
             </GlobalButton>
           </>
         }
       >
         <div className="space-y-4">
-          <GlobalInput id="cat-nome" label="Nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Espaços de Eventos" />
+          <GlobalInput
+            id="cat-nome"
+            label="Nome"
+            required
+            value={catNome}
+            onChange={(e) => setCatNome(e.target.value)}
+            placeholder="Ex: Espaços de Eventos"
+          />
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)" }}>Descrição</label>
             <textarea
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
+              value={catDescricao}
+              onChange={(e) => setCatDescricao(e.target.value)}
               rows={3}
-              style={{
-                width: "100%", padding: "8px var(--pad-x)",
-                background: "var(--surface)", color: "var(--text)",
-                border: "1px solid var(--border-strong)", borderRadius: "var(--r-md)",
-                fontFamily: "inherit", fontSize: "var(--font-ui)",
-                outline: "none", resize: "none",
-                transition: "border-color .12s, box-shadow .12s",
-              }}
-              onFocus={(e) => { e.target.style.borderColor = "var(--blue)"; e.target.style.boxShadow = "0 0 0 3px var(--ring)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "none"; }}
-              onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--gray-400)"; }}
-              onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--border-strong)"; }}
+              style={textareaStyle}
+              {...textareaHandlers}
             />
           </div>
-          {!editTarget && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium" style={{ color: "var(--text-2)" }}>Foto</label>
-              {fotoPreview && (
-                <div className="w-full h-32 rounded-lg overflow-hidden mb-2">
-                  <NextImage src={fotoPreview} alt="Preview" width={300} height={128} className="object-cover w-full h-full" />
-                </div>
-              )}
-              <input type="file" accept="image/*" onChange={handleFileChange} className="text-sm w-full" />
-            </div>
-          )}
+          <GlobalImageUpload
+            label="Foto"
+            optional
+            value={editTarget?.foto ?? null}
+            onChange={setCatFoto}
+          />
         </div>
       </GlobalModal>
 
-      {/* Modal Criar Subcategoria */}
+      {/* ── Modal Criar / Editar Subcategoria ── */}
       <GlobalModal
-        open={!!createSubFor}
-        onOpenChange={(o) => { if (!o) { setCreateSubFor(null); resetForm(); } }}
-        title={`Nova Subcategoria — ${createSubFor?.nome}`}
+        open={!!subModal}
+        onOpenChange={(o) => { if (!o) { setSubModal(null); resetSubForm(); } }}
+        title={subModalTitle}
         size="sm"
         footer={
           <>
-            <GlobalButton variant="outline" onClick={() => { setCreateSubFor(null); resetForm(); }}>Cancelar</GlobalButton>
-            <GlobalButton onClick={handleCreateSub} loading={isPending}>Criar</GlobalButton>
+            <GlobalButton variant="outline" onClick={() => { setSubModal(null); resetSubForm(); }}>
+              Cancelar
+            </GlobalButton>
+            <GlobalButton onClick={subModalAction} loading={isPending}>
+              {subModalLabel}
+            </GlobalButton>
           </>
         }
       >
         <div className="space-y-4">
-          <GlobalInput id="sub-nome" label="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+          <GlobalInput
+            id="sub-nome"
+            label="Nome"
+            required
+            value={subNome}
+            onChange={(e) => setSubNome(e.target.value)}
+          />
+          <GlobalSelect
+            id="sub-slug"
+            label="Slug"
+            required
+            value={subSlug}
+            onChange={(e) => setSubSlug(e.target.value)}
+          >
+            <option value="">Selecionar slug…</option>
+            {slugOptions.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </GlobalSelect>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)" }}>Descrição</label>
             <textarea
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
+              value={subDescricao}
+              onChange={(e) => setSubDescricao(e.target.value)}
               rows={2}
-              style={{
-                width: "100%", padding: "8px var(--pad-x)",
-                background: "var(--surface)", color: "var(--text)",
-                border: "1px solid var(--border-strong)", borderRadius: "var(--r-md)",
-                fontFamily: "inherit", fontSize: "var(--font-ui)",
-                outline: "none", resize: "none",
-                transition: "border-color .12s, box-shadow .12s",
-              }}
-              onFocus={(e) => { e.target.style.borderColor = "var(--blue)"; e.target.style.boxShadow = "0 0 0 3px var(--ring)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "var(--border-strong)"; e.target.style.boxShadow = "none"; }}
-              onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--gray-400)"; }}
-              onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.borderColor = "var(--border-strong)"; }}
+              style={textareaStyle}
+              {...textareaHandlers}
             />
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium" style={{ color: "var(--text-2)" }}>Foto</label>
-            <input type="file" accept="image/*" onChange={handleFileChange} className="text-sm w-full" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)" }}>Tipo</label>
+            <div className="flex gap-3">
+              {[{ value: 1, label: "Serviço" }, { value: 2, label: "Espaço" }].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setSubTipo(opt.value)}
+                  style={{
+                    flex: 1,
+                    padding: "7px 0",
+                    borderRadius: "var(--r-md)",
+                    fontSize: "var(--font-ui)",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    border: `1px solid ${subTipo === opt.value ? "var(--blue)" : "var(--border-strong)"}`,
+                    background: subTipo === opt.value ? "var(--blue-50)" : "var(--surface)",
+                    color: subTipo === opt.value ? "var(--blue-700)" : "var(--text-2)",
+                    transition: "all .12s",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
+          <GlobalImageUpload
+            label="Foto"
+            optional
+            value={subModal?.mode === "edit" ? subModal.sub.foto : null}
+            onChange={setSubFoto}
+          />
         </div>
       </GlobalModal>
 
+      {/* ── Confirm delete categoria ── */}
       <ConfirmModal
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
         title="Remover categoria?"
         description={`A categoria "${deleteTarget?.nome}" e todas as subcategorias serão removidas permanentemente.`}
         onConfirm={handleDelete}
+        loading={isPending}
+        confirmLabel="Remover"
+      />
+
+      {/* ── Confirm delete subcategoria ── */}
+      <ConfirmModal
+        open={!!deleteSub}
+        onOpenChange={(o) => !o && setDeleteSub(null)}
+        title="Remover subcategoria?"
+        description={`A subcategoria "${deleteSub?.nome}" será removida permanentemente.`}
+        onConfirm={handleDeleteSub}
         loading={isPending}
         confirmLabel="Remover"
       />

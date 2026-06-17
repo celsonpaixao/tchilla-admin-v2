@@ -3,6 +3,15 @@ import { serverFetch } from "@/lib/api/server";
 import type { ActionResult, ApiResponse } from "@/types/common.types";
 import type { CategoryData, SubCategoryData } from "@/types/category.types";
 
+export async function fetchTiposSlug(): Promise<ActionResult<string[]>> {
+  try {
+    const data = await serverFetch<string[]>("/api/Enum/atributos/tipos");
+    return { success: true, data };
+  } catch (err: unknown) {
+    return { success: false, error: String(err) };
+  }
+}
+
 export async function fetchCategorias(): Promise<ActionResult<CategoryData[]>> {
   try {
     const data = await serverFetch<ApiResponse<CategoryData[]>>("/api/Categoria/getAll");
@@ -35,15 +44,11 @@ export async function criarCategoria(formData: FormData): Promise<ActionResult<C
   }
 }
 
-export async function atualizarCategoria(
-  id: number,
-  nome: string,
-  descricao: string
-): Promise<ActionResult<void>> {
+export async function atualizarCategoria(formData: FormData): Promise<ActionResult<void>> {
   try {
     await serverFetch(`/api/Categoria/update`, {
       method: "PUT",
-      params: { id, Nome: nome, Descricao: descricao },
+      formData,
     });
     return { success: true, data: undefined };
   } catch (err: unknown) {
