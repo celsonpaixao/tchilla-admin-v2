@@ -3,12 +3,15 @@ export interface SettingsAppEnum {
   values: string[];
 }
 
-export interface CampanhaRequest {
-  userId: number;
+export interface NotificacaoBody {
   titulo: string;
   mensagem: string;
-  tipo: "Geral";
+  tipo?: string;
+  imagem?: string;
+  data?: Record<string, string>;
 }
+
+export type AudienceType = "todos-clientes" | "cliente" | "todos-parceiros" | "parceiro";
 
 export interface EnderecoResponse {
   id: number;
