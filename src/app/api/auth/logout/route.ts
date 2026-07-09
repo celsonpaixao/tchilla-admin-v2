@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { clearToken, getToken } from "@/lib/auth/cookies";
+import { getApiBaseUrl } from "@/lib/api/base-url";
 
 export async function POST() {
   try {
@@ -7,7 +8,7 @@ export async function POST() {
 
     // Notifica a API .NET
     if (token) {
-      await fetch(`${process.env.API_URL}/api/Auth/logout`, {
+      await fetch(`${getApiBaseUrl()}/api/Auth/logout`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => {}); // Não bloqueia mesmo se falhar
