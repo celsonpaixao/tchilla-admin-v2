@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth/cookies";
+import { getApiBaseUrl } from "@/lib/api/base-url";
 import { ApiException } from "@/types/common.types";
 import { ROUTES } from "@/constants/routes";
 
@@ -18,7 +19,7 @@ export async function serverFetch<T>(
   options: FetchOptions = {}
 ): Promise<T> {
   const token = await getToken();
-  const baseURL = process.env.API_URL;
+  const baseURL = getApiBaseUrl();
 
   let url = `${baseURL}${path}`;
   if (options.params) {
