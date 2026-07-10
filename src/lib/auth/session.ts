@@ -7,13 +7,10 @@ export async function getSession(): Promise<UsuarioInterface | null> {
   if (!token) return null;
 
   try {
-    const res = await fetch(
-      `${getApiBaseUrl()}/api/Usuario/getInfoByToken`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(`${getApiBaseUrl()}/api/Usuario/getInfoByToken`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
 
     if (!res.ok) return null;
 
