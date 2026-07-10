@@ -1,9 +1,9 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import NextImage from "next/image";
 import {
   Search, Send, Users, User, Building2, Briefcase,
-  Plus, X, Image as ImageIcon, SlidersHorizontal,
+  Image as ImageIcon, SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { ClientesData } from "@/types/client.types";
@@ -19,10 +19,15 @@ import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { GlobalButton } from "@/components/global/GlobalButton";
 import { GlobalSelect } from "@/components/global/GlobalSelect";
 import { PageShell } from "@/components/global/PageShell";
+import { PromoSearchDialog } from "@/components/notificacoes/PromoSearchDialog";
+import type { PromoCatalogItem } from "@/actions/campanha.actions";
+import type { CupomData } from "@/types/cupom.types";
+import { CupomSelectDialog } from "@/components/notificacoes/CupomSelectDialog";
 
 interface CampanhasPageProps {
   clientes: ClientesData[];
   agencias: AgenciaData[];
+  cupons: CupomData[];
 }
 
 const AUDIENCE_OPTIONS: Array<{
@@ -61,21 +66,51 @@ const onBlurInput = (e: React.FocusEvent<HTMLInputElement>) => {
   e.target.style.boxShadow = "none";
 };
 
-export function CampanhasPage({ clientes, agencias }: CampanhasPageProps) {
+function getLegacyPromoKey(tipo: string): string {
+  const normalized = tipo.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  if (normalized.includes("espaco")) return "espace";
+  if (normalized.includes("servico")) return "service";
+  if (normalized.includes("combo")) return "combo";
+
+  return "service";
+}
+
+export function CampanhasPage({ clientes, agencias, cupons }: CampanhasPageProps) {
   const [audienceType, setAudienceType] = useState<AudienceType>("todos-clientes");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selectedName, setSelectedName] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [isPromoDialogOpen, setIsPromoDialogOpen] = useState(false);
+  const [promoSelection, setPromoSelection] = useState<PromoCatalogItem | null>(null);
+  const [isCupomDialogOpen, setIsCupomDialogOpen] = useState(false);
+  const [cupomSelection, setCupomSelection] = useState<CupomData | null>(null);
 
   const [titulo, setTitulo] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [tipo, setTipo] = useState("Geral");
   const [imagem, setImagem] = useState("");
-  const [customData, setCustomData] = useState<Array<{ key: string; value: string }>>([]);
 
   const [isPending, startTransition] = useTransition();
 
   const isBroadcast = AUDIENCE_OPTIONS.find((o) => o.id === audienceType)?.broadcast ?? false;
+
+  const automaticParams =
+    tipo === "Promo" && promoSelection
+      ? [
+          {
+            key: getLegacyPromoKey(promoSelection.tipo),
+            value: String(promoSelection.id),
+          },
+        ]
+      : tipo === "Cupom" && cupomSelection
+        ? [
+            {
+              key: "cupom",
+              value: String(cupomSelection.id),
+            },
+          ]
+        : [];
 
   const filteredClientes = clientes.filter(
     (c) => !search || c.nome.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase())
@@ -86,6 +121,17 @@ export function CampanhasPage({ clientes, agencias }: CampanhasPageProps) {
 
   const isValid = titulo.trim() !== "" && mensagem.trim() !== "" && (isBroadcast || selectedId !== null);
 
+  useEffect(() => {
+    if (tipo !== "Promo") {
+      setIsPromoDialogOpen(false);
+      setPromoSelection(null);
+    }
+    if (tipo !== "Cupom") {
+      setIsCupomDialogOpen(false);
+      setCupomSelection(null);
+    }
+  }, [tipo]);
+
   function handleAudienceChange(type: AudienceType) {
     setAudienceType(type);
     setSelectedId(null);
@@ -93,21 +139,12 @@ export function CampanhasPage({ clientes, agencias }: CampanhasPageProps) {
     setSearch("");
   }
 
-  function addParam() {
-    setCustomData((prev) => [...prev, { key: "", value: "" }]);
-  }
-
-  function updateParam(idx: number, field: "key" | "value", val: string) {
-    setCustomData((prev) => prev.map((p, i) => (i === idx ? { ...p, [field]: val } : p)));
-  }
-
-  function removeParam(idx: number) {
-    setCustomData((prev) => prev.filter((_, i) => i !== idx));
-  }
-
   function buildBody(): NotificacaoBody {
     const data: Record<string, string> = {};
-    customData.forEach(({ key, value }) => { if (key.trim()) data[key.trim()] = value; });
+    automaticParams.forEach(({ key, value }) => {
+      data[key] = value;
+    });
+
     return {
       titulo: titulo.trim(),
       mensagem: mensagem.trim(),
@@ -134,12 +171,23 @@ export function CampanhasPage({ clientes, agencias }: CampanhasPageProps) {
           audienceType === "todos-parceiros" ? "todos os parceiros" : selectedName;
         toast.success(`Campanha enviada para ${target}!`);
         setTitulo(""); setMensagem(""); setTipo("Geral");
-        setImagem(""); setCustomData([]);
+        setImagem("");
         setSelectedId(null); setSelectedName("");
       } else {
         toast.error(result.error ?? "Erro ao enviar campanha.");
       }
     });
+  }
+
+  function handlePromoSelect(item: PromoCatalogItem) {
+    setPromoSelection(item);
+    if (item.imagem.trim()) {
+      setImagem(item.imagem.trim());
+    }
+  }
+
+  function handleCupomSelect(item: CupomData) {
+    setCupomSelection(item);
   }
 
   const activeOpt = AUDIENCE_OPTIONS.find((o) => o.id === audienceType);
@@ -328,78 +376,123 @@ export function CampanhasPage({ clientes, agencias }: CampanhasPageProps) {
             </div>
           </div>
 
-          {/* Parâmetros customizados */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div className="flex items-center justify-between">
-              <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
-                <SlidersHorizontal size={12} />
-                Parâmetros adicionais
-                <span style={{ fontWeight: 400, color: "var(--text-3)", fontSize: 11.5 }}>opcional</span>
-              </label>
-              <button
-                onClick={addParam}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg cursor-pointer"
-                style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}
-              >
-                <Plus size={11} /> Personalizado
-              </button>
-            </div>
+          {tipo === "Promo" && (
+            <div className="rounded-xl border p-4 space-y-3" style={{ background: "var(--blue-25)", borderColor: "var(--blue-100)" }}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Proposta da campanha</p>
+                  <p className="text-xs" style={{ color: "var(--text-3)" }}>Selecione um espaço, serviço ou combo para usar como Promo.</p>
+                </div>
+                <GlobalButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsPromoDialogOpen(true)}
+                  leftIcon={<Search size={14} />}
+                >
+                  Adicionar proposta
+                </GlobalButton>
+              </div>
 
-            {/* Sugestões pré-definidas */}
-            <div className="flex flex-wrap gap-1.5">
-              {(["service", "espace", "combo", "cupom"] as const).map((key) => {
-                const used = customData.some((p) => p.key === key);
-                return (
-                  <button
-                    key={key}
-                    onClick={() => !used && setCustomData((prev) => [...prev, { key, value: "" }])}
-                    disabled={used}
-                    className="text-xs px-2.5 py-1 rounded-full font-mono cursor-pointer transition-all"
-                    style={{
-                      border: `1px solid ${used ? "var(--border)" : "var(--border-strong)"}`,
-                      background: used ? "var(--gray-50)" : "var(--surface)",
-                      color: used ? "var(--text-3)" : "var(--text-2)",
-                      opacity: used ? 0.5 : 1,
-                      cursor: used ? "default" : "pointer",
-                      textDecoration: used ? "line-through" : "none",
-                    }}
-                  >
-                    {used ? "✓ " : "+ "}{key}
-                  </button>
-                );
-              })}
-            </div>
-
-            {customData.length > 0 && (
-              <div className="space-y-2">
-                {customData.map((param, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      value={param.key}
-                      onChange={(e) => updateParam(idx, "key", e.target.value)}
-                      placeholder="chave"
-                      style={{ ...inputStyle, flex: "0 0 38%", fontFamily: "monospace", fontSize: 12 } as React.CSSProperties}
-                      onFocus={onFocusInput}
-                      onBlur={onBlurInput}
-                    />
-                    <input
-                      value={param.value}
-                      onChange={(e) => updateParam(idx, "value", e.target.value)}
-                      placeholder="valor"
-                      style={{ ...inputStyle, flex: 1 }}
-                      onFocus={onFocusInput}
-                      onBlur={onBlurInput}
-                    />
-                    <button
-                      onClick={() => removeParam(idx)}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0 cursor-pointer"
-                      style={{ color: "var(--danger-fg)" }}
-                    >
-                      <X size={13} />
-                    </button>
+              {promoSelection ? (
+                <div className="flex items-start gap-3 rounded-xl border p-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+                  <div className="h-16 w-20 overflow-hidden rounded-lg flex-shrink-0" style={{ background: "var(--gray-100)" }}>
+                    {promoSelection.imagem ? (
+                      <NextImage
+                        src={promoSelection.imagem}
+                        alt={promoSelection.nome}
+                        width={80}
+                        height={64}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
                   </div>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-semibold" style={{ color: "var(--text)" }}>{promoSelection.nome}</p>
+                      <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase" style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}>
+                        {promoSelection.tipo}
+                      </span>
+                    </div>
+                    <p className="line-clamp-2 text-xs" style={{ color: "var(--text-3)" }}>{promoSelection.descricao || "Sem descrição disponível."}</p>
+                    <div className="flex flex-wrap gap-3 text-[11px]" style={{ color: "var(--text-2)" }}>
+                      <span>ID {promoSelection.id}</span>
+                      <span>{promoSelection.tipoPreco}</span>
+                      {promoSelection.capacidade ? <span>{promoSelection.capacidade} pessoas</span> : null}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs" style={{ color: "var(--text-3)" }}>
+                  Nenhuma proposta selecionada. Use o botão para pesquisar e escolher uma opção.
+                </p>
+              )}
+            </div>
+          )}
+
+          {tipo === "Cupom" && (
+            <div className="rounded-xl border p-4 space-y-3" style={{ background: "var(--blue-25)", borderColor: "var(--blue-100)" }}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>Cupom da campanha</p>
+                  <p className="text-xs" style={{ color: "var(--text-3)" }}>Selecione um cupom para preencher os parâmetros automaticamente.</p>
+                </div>
+                <GlobalButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setIsCupomDialogOpen(true)}
+                  leftIcon={<Search size={14} />}
+                >
+                  Selecionar cupom
+                </GlobalButton>
+              </div>
+
+              {cupomSelection ? (
+                <div className="rounded-xl border p-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{cupomSelection.nome}</p>
+                      <p className="text-xs" style={{ color: "var(--text-3)" }}>
+                        {cupomSelection.porcentagemDesconto}% de desconto • Válido até {cupomSelection.validoAte.slice(0, 10)}
+                      </p>
+                    </div>
+                    <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase" style={{ background: cupomSelection.ativo ? "var(--green-50)" : "var(--gray-100)", color: cupomSelection.ativo ? "var(--green-700)" : "var(--text-3)" }}>
+                      {cupomSelection.ativo ? "Ativo" : "Inativo"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs" style={{ color: "var(--text-3)" }}>
+                  Nenhum cupom selecionado. Use o botão para escolher um código.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Parâmetros automáticos */}
+          <div className="space-y-2">
+            <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+              <SlidersHorizontal size={12} />
+              Parâmetros automáticos
+              <span style={{ fontWeight: 400, color: "var(--text-3)", fontSize: 11.5 }}>opcional</span>
+            </label>
+
+            {automaticParams.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {automaticParams.map((param) => (
+                  <span
+                    key={param.key}
+                    className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs"
+                    style={{ background: "var(--gray-50)", color: "var(--text-2)", border: "1px solid var(--border)" }}
+                  >
+                    <strong style={{ fontFamily: "monospace" }}>{param.key}</strong>
+                    <span style={{ color: "var(--text-3)" }}>{param.value}</span>
+                  </span>
                 ))}
               </div>
+            ) : (
+              <p className="text-xs" style={{ color: "var(--text-3)" }}>
+                Selecionar uma proposta ou cupom vai preencher os parâmetros automaticamente.
+              </p>
             )}
           </div>
 
@@ -559,6 +652,19 @@ export function CampanhasPage({ clientes, agencias }: CampanhasPageProps) {
           </GlobalButton>
         </div>
       </div>
+
+      <PromoSearchDialog
+        open={isPromoDialogOpen}
+        onOpenChange={setIsPromoDialogOpen}
+        onSelectItem={handlePromoSelect}
+      />
+
+      <CupomSelectDialog
+        open={isCupomDialogOpen}
+        onOpenChange={setIsCupomDialogOpen}
+        cupons={cupons}
+        onSelectItem={handleCupomSelect}
+      />
     </PageShell>
   );
 }

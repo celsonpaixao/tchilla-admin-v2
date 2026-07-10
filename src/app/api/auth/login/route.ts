@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     if (!data.isSuccess || !data.data) {
       return NextResponse.json(
         { error: data.message || data.errorMessage || "Credenciais inválidas" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     console.error("[login/route]", err);
     return NextResponse.json(
       { error: "Erro interno. Tente novamente." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

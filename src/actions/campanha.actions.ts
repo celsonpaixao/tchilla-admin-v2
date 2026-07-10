@@ -3,6 +3,18 @@ import { serverFetch } from "@/lib/api/server";
 import type { ActionResult, ApiResponse } from "@/types/common.types";
 import type { NotificacaoBody } from "@/types/settings.types";
 
+export interface PromoCatalogItem {
+  id: number;
+  nome: string;
+  descricao: string;
+  imagem: string;
+  preco: number;
+  tipoPreco: string;
+  capacidade: number;
+  endereco: string;
+  tipo: string;
+}
+
 export async function notificarTodosClientes(body: NotificacaoBody): Promise<ActionResult<void>> {
   try {
     await serverFetch<ApiResponse<void>>("/api/Notificacao/notificar/todos-clientes", {
@@ -63,6 +75,28 @@ export async function fetchEnums(): Promise<ActionResult<Array<{ name: string; v
       "/api/Enum/enums",
       { revalidate: 3600 }
     );
+    return { success: true, data: data.data ?? [] };
+  } catch (err: unknown) {
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function searchPromoCatalog(
+  termo: string,
+  pagina = 1,
+  tamanhoPagina = 10
+): Promise<ActionResult<PromoCatalogItem[]>> {
+  try {
+    const data = await serverFetch<ApiResponse<PromoCatalogItem[]>>("/api/Search/pesquisa", {
+      method: "POST",
+      params: {
+        termo,
+        pagina,
+        tamanhoPagina,
+      },
+      revalidate: 0,
+    });
+
     return { success: true, data: data.data ?? [] };
   } catch (err: unknown) {
     return { success: false, error: String(err) };
