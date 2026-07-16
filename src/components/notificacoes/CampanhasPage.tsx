@@ -3,7 +3,7 @@ import { useEffect, useState, useTransition } from "react";
 import NextImage from "next/image";
 import {
   Search, Send, Users, User, Building2, Briefcase,
-  Image as ImageIcon, SlidersHorizontal,
+  Image as ImageIcon, SlidersHorizontal, History,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { ClientesData } from "@/types/client.types";
@@ -23,6 +23,9 @@ import { PromoSearchDialog } from "@/components/notificacoes/PromoSearchDialog";
 import type { PromoCatalogItem } from "@/actions/campanha.actions";
 import type { CupomData } from "@/types/cupom.types";
 import { CupomSelectDialog } from "@/components/notificacoes/CupomSelectDialog";
+import { useCampanhaRascunhos } from "@/hooks/useCampanhaRascunhos";
+import type { CampanhaRascunho } from "@/types/campanha.types";
+import { formatRelativeTime } from "@/lib/utils";
 
 interface CampanhasPageProps {
   clientes: ClientesData[];
@@ -92,6 +95,8 @@ export function CampanhasPage({ clientes, agencias, cupons }: CampanhasPageProps
   const [imagem, setImagem] = useState("");
 
   const [isPending, startTransition] = useTransition();
+  const [isRascunhosOpen, setIsRascunhosOpen] = useState(false);
+  const { rascunhos, loading: loadingRascunhos, carregar: carregarRascunhos, salvar: salvarRascunho } = useCampanhaRascunhos();
 
   const isBroadcast = AUDIENCE_OPTIONS.find((o) => o.id === audienceType)?.broadcast ?? false;
 
@@ -170,6 +175,20 @@ export function CampanhasPage({ clientes, agencias, cupons }: CampanhasPageProps
           audienceType === "todos-clientes"  ? "todos os clientes" :
           audienceType === "todos-parceiros" ? "todos os parceiros" : selectedName;
         toast.success(`Campanha enviada para ${target}!`);
+
+        void salvarRascunho({
+          audienceType,
+          selectedId: isBroadcast ? null : selectedId,
+          selectedName: isBroadcast ? null : selectedName || null,
+          titulo: body.titulo,
+          mensagem: body.mensagem,
+          tipo: body.tipo ?? tipo,
+          imagem: body.imagem ?? null,
+          data: body.data ?? null,
+          promoSelection: tipo === "Promo" ? promoSelection : null,
+          cupomSelection: tipo === "Cupom" ? cupomSelection : null,
+        });
+
         setTitulo(""); setMensagem(""); setTipo("Geral");
         setImagem("");
         setSelectedId(null); setSelectedName("");
@@ -177,6 +196,29 @@ export function CampanhasPage({ clientes, agencias, cupons }: CampanhasPageProps
         toast.error(result.error ?? "Erro ao enviar campanha.");
       }
     });
+  }
+
+  function handleToggleRascunhos() {
+    setIsRascunhosOpen((open) => {
+      const next = !open;
+      if (next) void carregarRascunhos();
+      return next;
+    });
+  }
+
+  function handleUsarRascunho(r: CampanhaRascunho) {
+    setAudienceType(r.audienceType);
+    setSelectedId(r.selectedId);
+    setSelectedName(r.selectedName ?? "");
+    setSearch("");
+    setTitulo(r.titulo);
+    setMensagem(r.mensagem);
+    setTipo(r.tipo);
+    setImagem(r.imagem ?? "");
+    setPromoSelection(r.promoSelection);
+    setCupomSelection(r.cupomSelection);
+    setIsRascunhosOpen(false);
+    toast.success("Configuração da campanha carregada.");
   }
 
   function handlePromoSelect(item: PromoCatalogItem) {
@@ -193,7 +235,70 @@ export function CampanhasPage({ clientes, agencias, cupons }: CampanhasPageProps
   const activeOpt = AUDIENCE_OPTIONS.find((o) => o.id === audienceType);
 
   return (
-    <PageShell title="Campanhas Push" subtitle="Envie notificações push segmentadas">
+    <PageShell
+      title="Campanhas Push"
+      subtitle="Envie notificações push segmentadas"
+      actions={
+        <div className="relative">
+          <GlobalButton
+            variant="secondary"
+            size="sm"
+            leftIcon={<History size={14} />}
+            onClick={handleToggleRascunhos}
+          >
+            Usar campanha salva
+          </GlobalButton>
+
+          {isRascunhosOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setIsRascunhosOpen(false)} />
+              <div
+                className="absolute right-0 top-11 w-80 max-h-96 overflow-y-auto rounded-xl z-20 p-2 space-y-1"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)", boxShadow: "var(--shadow-lg)" }}
+              >
+                {loadingRascunhos && (
+                  <p className="text-xs text-center py-4" style={{ color: "var(--text-3)" }}>Carregando…</p>
+                )}
+                {!loadingRascunhos && rascunhos.length === 0 && (
+                  <p className="text-xs text-center py-4" style={{ color: "var(--text-3)" }}>
+                    Nenhuma campanha salva ainda. Envie uma campanha para guardá-la aqui.
+                  </p>
+                )}
+                {!loadingRascunhos && rascunhos.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => handleUsarRascunho(r)}
+                    className="w-full text-left p-2.5 rounded-lg cursor-pointer"
+                    style={{ transition: "background .12s" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--gray-25)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                  >
+                    <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>{r.titulo}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--text-3)" }}>{r.mensagem}</p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                        style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}
+                      >
+                        {AUDIENCE_OPTIONS.find((o) => o.id === r.audienceType)?.label ?? r.audienceType}
+                      </span>
+                      {r.atualizadoEm && (
+                        <span style={{ fontSize: 11, color: "var(--text-3)" }}>
+                          {formatRelativeTime(r.atualizadoEm.toDate().toISOString())}
+                        </span>
+                      )}
+                      {r.usageCount > 1 && (
+                        <span style={{ fontSize: 11, color: "var(--text-3)" }}>usada {r.usageCount}x</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      }
+    >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
         {/* ── Coluna esquerda: audiência ── */}
@@ -413,11 +518,13 @@ export function CampanhasPage({ clientes, agencias, cupons }: CampanhasPageProps
                         {promoSelection.tipo}
                       </span>
                     </div>
-                    <p className="line-clamp-2 text-xs" style={{ color: "var(--text-3)" }}>{promoSelection.descricao || "Sem descrição disponível."}</p>
+                    <p className="line-clamp-2 text-xs" style={{ color: "var(--text-3)" }}>
+                      {promoSelection.descricao || promoSelection.local || "Sem descrição disponível."}
+                    </p>
                     <div className="flex flex-wrap gap-3 text-[11px]" style={{ color: "var(--text-2)" }}>
                       <span>ID {promoSelection.id}</span>
-                      <span>{promoSelection.tipoPreco}</span>
-                      {promoSelection.capacidade ? <span>{promoSelection.capacidade} pessoas</span> : null}
+                      <span>{promoSelection.tags[0] ?? "Sem tag"}</span>
+                      <span>Avaliação {promoSelection.mediaAvaliacao.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>

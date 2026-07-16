@@ -25,6 +25,10 @@ export const ROUTES = {
     PAGAMENTOS: "/financeiro/pagamentos",
   },
 
+  ANALISE: {
+    ORCAMENTOS: "/analise/orcamentos",
+  },
+
   CONFIGURACOES: "/configuracoes",
 } as const;
 

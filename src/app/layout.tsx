@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -53,6 +53,9 @@ export const metadata: Metadata = {
     icon: "/admin_favicon.png",
     apple: "/admin_favicon.png",
   },
+};
+
+export const viewport: Viewport = {
   themeColor: "#0E2A42",
 };
 
