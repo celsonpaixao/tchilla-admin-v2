@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "api.tchilla.com" },
       { protocol: "https", hostname: "api.hmg.tchilla.com" },
       { protocol: "https", hostname: "storage.tchilla.com" },
+      { protocol: "https", hostname: "exemplo.com" },
       { protocol: "http", hostname: "181.215.135.159", port: "9000" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },

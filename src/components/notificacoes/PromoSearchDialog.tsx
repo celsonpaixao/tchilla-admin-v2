@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Search, Loader2, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Search, Loader2, Image as ImageIcon, Star } from "lucide-react";
 import { toast } from "sonner";
 import { GlobalModal } from "@/components/global/GlobalModal";
-import { GlobalButton } from "@/components/global/GlobalButton";
 import { searchPromoCatalog, type PromoCatalogItem } from "@/actions/campanha.actions";
+
+const MIN_SEARCH_LENGTH = 4;
+const SEARCH_DEBOUNCE_MS = 350;
+const RESULTS_PER_PAGE = 6;
 
 interface PromoSearchDialogProps {
   open: boolean;
@@ -26,38 +29,75 @@ function formatPrice(value: number, currency = "AOA") {
   }
 }
 
+function formatRating(value: number) {
+  return value > 0 ? value.toFixed(1) : "0";
+}
+
 export function PromoSearchDialog({ open, onOpenChange, onSelectItem }: PromoSearchDialogProps) {
   const [termo, setTermo] = useState("");
   const [results, setResults] = useState<PromoCatalogItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const searchRequestId = useRef(0);
 
-  async function handleSearch() {
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
     const normalized = termo.trim();
 
-    if (!normalized) {
-      toast.error("Digite um termo para pesquisar.");
-      return;
-    }
-
-    setIsSearching(true);
-    setHasSearched(true);
-
-    const result = await searchPromoCatalog(normalized, 1, 10);
-    setIsSearching(false);
-
-    if (!result.success) {
-      toast.error(result.error ?? "Erro ao pesquisar catálogo.");
+    if (normalized.length < MIN_SEARCH_LENGTH) {
+      setIsSearching(false);
+      setHasSearched(false);
       setResults([]);
+      setHasMore(false);
       return;
     }
 
-    setResults(result.data);
-  }
+    searchRequestId.current += 1;
+    const requestId = searchRequestId.current;
+
+    const timeoutId = window.setTimeout(() => {
+      setIsSearching(true);
+      setHasSearched(true);
+
+      void searchPromoCatalog(normalized, page, RESULTS_PER_PAGE).then((result) => {
+        if (searchRequestId.current !== requestId) {
+          return;
+        }
+
+        setIsSearching(false);
+
+        if (!result.success) {
+          toast.error(result.error ?? "Erro ao pesquisar catálogo.");
+          setResults([]);
+          setHasMore(false);
+          return;
+        }
+
+        setResults(result.data);
+        setHasMore(result.data.length === RESULTS_PER_PAGE);
+      });
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [open, termo, page]);
 
   function handlePick(item: PromoCatalogItem) {
     onSelectItem(item);
     onOpenChange(false);
+  }
+
+  function handleTermChange(value: string) {
+    setTermo(value);
+    setPage(1);
+  }
+
+  function getPrimaryTag(item: PromoCatalogItem) {
+    return item.tags[0] ?? item.tipo;
   }
 
   return (
@@ -67,11 +107,6 @@ export function PromoSearchDialog({ open, onOpenChange, onSelectItem }: PromoSea
       title="Selecionar proposta"
       description="Pesquise um espaço, serviço ou combo para usar na campanha Promo."
       size="xl"
-      footer={
-        <GlobalButton variant="secondary" onClick={() => onOpenChange(false)}>
-          Fechar
-        </GlobalButton>
-      }
     >
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -79,14 +114,8 @@ export function PromoSearchDialog({ open, onOpenChange, onSelectItem }: PromoSea
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-3)" }} />
             <input
               value={termo}
-              onChange={(e) => setTermo(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  void handleSearch();
-                }
-              }}
-              placeholder="Ex: espaço para casamento, som, combo aniversário…"
+              onChange={(e) => handleTermChange(e.target.value)}
+              placeholder="Digite pelo menos 4 caracteres…"
               className="w-full rounded-lg border px-10 py-2.5 text-sm outline-none"
               style={{
                 background: "var(--surface)",
@@ -95,10 +124,6 @@ export function PromoSearchDialog({ open, onOpenChange, onSelectItem }: PromoSea
               }}
             />
           </div>
-
-          <GlobalButton onClick={handleSearch} loading={isSearching} rightIcon={<Sparkles size={14} />}>
-            Pesquisar
-          </GlobalButton>
         </div>
 
         <div className="rounded-xl border p-3" style={{ borderColor: "var(--border)" }}>
@@ -107,25 +132,30 @@ export function PromoSearchDialog({ open, onOpenChange, onSelectItem }: PromoSea
               <Loader2 size={16} className="animate-spin" />
               A pesquisar propostas…
             </div>
+          ) : termo.trim().length > 0 && termo.trim().length < MIN_SEARCH_LENGTH ? (
+            <div className="py-10 text-center text-sm" style={{ color: "var(--text-3)" }}>
+              Digite mais {MIN_SEARCH_LENGTH - termo.trim().length} caractere{MIN_SEARCH_LENGTH - termo.trim().length === 1 ? "" : "s"} para começar a buscar.
+            </div>
           ) : results.length > 0 ? (
-            <div className="grid gap-3">
+            <div className="space-y-3">
+              <div className="grid max-h-[52vh] gap-2 overflow-y-auto pr-1">
               {results.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handlePick(item)}
-                  className="flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors cursor-pointer"
+                  className="flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-colors cursor-pointer"
                   style={{
                     background: "var(--surface)",
                     borderColor: "var(--border)",
                   }}
                 >
-                  <div className="relative h-20 w-24 flex-shrink-0 overflow-hidden rounded-lg" style={{ background: "var(--gray-100)" }}>
+                  <div className="relative h-14 w-16 flex-shrink-0 overflow-hidden rounded-md" style={{ background: "var(--gray-100)" }}>
                     {item.imagem ? (
                       <Image
                         src={item.imagem}
                         alt={item.nome}
                         fill
-                        sizes="96px"
+                        sizes="64px"
                         className="object-cover"
                       />
                     ) : (
@@ -136,31 +166,60 @@ export function PromoSearchDialog({ open, onOpenChange, onSelectItem }: PromoSea
                   </div>
 
                   <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="truncate text-sm font-semibold" style={{ color: "var(--text)" }}>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="truncate text-sm font-semibold leading-tight" style={{ color: "var(--text)" }}>
                         {item.nome}
                       </h3>
                       <span
-                        className="rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+                        className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                         style={{ background: "var(--blue-50)", color: "var(--blue-700)" }}
                       >
-                        {item.tipo}
+                        {getPrimaryTag(item)}
                       </span>
                     </div>
 
-                    <p className="line-clamp-2 text-xs" style={{ color: "var(--text-3)" }}>
-                      {item.descricao || "Sem descrição disponível."}
+                    <p className="line-clamp-1 text-[11px] leading-tight" style={{ color: "var(--text-3)" }}>
+                      {item.descricao || item.local || "Sem descrição disponível."}
                     </p>
 
-                    <div className="flex flex-wrap gap-3 pt-1 text-[11px]" style={{ color: "var(--text-2)" }}>
-                      <span>{formatPrice(item.preco)}</span>
-                      <span>{item.tipoPreco}</span>
-                      {item.capacidade ? <span>{item.capacidade} pessoas</span> : null}
-                      {item.endereco ? <span>{item.endereco}</span> : null}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5 text-[10px]" style={{ color: "var(--text-2)" }}>
+                      <span className="font-medium">{formatPrice(item.preco)}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Star size={9} fill="currentColor" />
+                        {formatRating(item.mediaAvaliacao)}
+                      </span>
+                      {item.local ? <span className="truncate">{item.local}</span> : null}
                     </div>
                   </div>
                 </button>
               ))}
+              </div>
+
+              <div className="flex items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+                <div className="text-xs" style={{ color: "var(--text-3)" }}>
+                  Página {page}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    disabled={page === 1 || isSearching}
+                    className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ background: "var(--surface)", borderColor: "var(--border-strong)", color: "var(--text)" }}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => current + 1)}
+                    disabled={!hasMore || isSearching}
+                    className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ background: "var(--surface)", borderColor: "var(--border-strong)", color: "var(--text)" }}
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </div>
             </div>
           ) : hasSearched ? (
             <div className="py-10 text-center text-sm" style={{ color: "var(--text-3)" }}>
@@ -168,7 +227,7 @@ export function PromoSearchDialog({ open, onOpenChange, onSelectItem }: PromoSea
             </div>
           ) : (
             <div className="py-10 text-center text-sm" style={{ color: "var(--text-3)" }}>
-              Pesquise para encontrar propostas, serviços ou combos.
+              Pesquise propostas, serviços ou combos digitando 4 ou mais caracteres.
             </div>
           )}
         </div>
