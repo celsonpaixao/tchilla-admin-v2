@@ -12,6 +12,7 @@ export const ROUTES = {
     CATEGORIAS: "/gestao/categorias",
     SUPERVISORES: "/gestao/supervisores",
     CAMPANHAS: "/gestao/campanhas",
+    PROMOCOES: "/gestao/promocoes",
     CUPONS: "/gestao/cupons",
   },
 
