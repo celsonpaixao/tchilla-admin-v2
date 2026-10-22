@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getToken } from "@/lib/auth/cookies";
+import { getApiBaseUrl } from "@/lib/api/base-url";
 import { ApiException } from "@/types/common.types";
 import { ROUTES } from "@/constants/routes";
 
@@ -15,18 +16,18 @@ interface FetchOptions {
 
 export async function serverFetch<T>(
   path: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
 ): Promise<T> {
   const token = await getToken();
-  const baseURL = process.env.API_URL;
+  const baseURL = getApiBaseUrl();
 
   let url = `${baseURL}${path}`;
   if (options.params) {
     const searchParams = new URLSearchParams(
       Object.entries(options.params).reduce(
         (acc, [k, v]) => ({ ...acc, [k]: String(v) }),
-        {} as Record<string, string>
-      )
+        {} as Record<string, string>,
+      ),
     );
     url += `?${searchParams.toString()}`;
   }
@@ -45,10 +46,13 @@ export async function serverFetch<T>(
     body: options.formData
       ? options.formData
       : options.body
-      ? JSON.stringify(options.body)
-      : undefined,
+        ? JSON.stringify(options.body)
+        : undefined,
     cache: options.revalidate !== undefined ? undefined : "no-store",
-    next: options.revalidate !== undefined ? { revalidate: options.revalidate } : undefined,
+    next:
+      options.revalidate !== undefined
+        ? { revalidate: options.revalidate }
+        : undefined,
   });
 
   if (res.status === 401) {
@@ -59,7 +63,7 @@ export async function serverFetch<T>(
     const data = await res.json().catch(() => ({}));
     throw new ApiException(
       data.message || data.errorMessage || data.error || "Erro desconhecido",
-      res.status
+      res.status,
     );
   }
 

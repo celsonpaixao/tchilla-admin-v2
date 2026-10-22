@@ -1,4 +1,5 @@
 import { getToken } from "./cookies";
+import { getApiBaseUrl } from "@/lib/api/base-url";
 import type { UsuarioInterface } from "@/types/user.types";
 
 export async function getSession(): Promise<UsuarioInterface | null> {
@@ -6,13 +7,10 @@ export async function getSession(): Promise<UsuarioInterface | null> {
   if (!token) return null;
 
   try {
-    const res = await fetch(
-      `${process.env.API_URL}/api/Usuario/getInfoByToken`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(`${getApiBaseUrl()}/api/Usuario/getInfoByToken`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
 
     if (!res.ok) return null;
 

@@ -94,6 +94,7 @@ export const GlobalButton = forwardRef<HTMLButtonElement, GlobalButtonProps>(
     return (
       <button
         ref={ref}
+        type="button"
         disabled={isDisabled}
         className={cn(
           "inline-flex items-center justify-center font-medium transition-all duration-150 cursor-pointer select-none border border-transparent",

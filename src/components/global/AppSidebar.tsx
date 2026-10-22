@@ -6,6 +6,7 @@ import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
   CreditCard, Settings, LogOut, Loader2, Menu, X,
   Tag, Megaphone, BarChart3, Percent,
+  Receipt,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
@@ -41,6 +42,7 @@ function buildNav(unreadCount: number): NavGroup[] {
         { label: "Supervisores", href: ROUTES.GESTAO.SUPERVISORES, icon: <UserCheck size={17} /> },
         { label: "Campanhas",    href: ROUTES.GESTAO.CAMPANHAS,    icon: <Megaphone size={17} /> },
         { label: "Promoções",    href: ROUTES.GESTAO.PROMOCOES,    icon: <Percent size={17} /> },
+        { label: "Promoções",    href: ROUTES.GESTAO.PROMOCOES,    icon: <Percent size={17} /> },
       ],
     },
     {
@@ -55,6 +57,7 @@ function buildNav(unreadCount: number): NavGroup[] {
       groupLabel: "Análise",
       links: [
         { label: "Pagamentos", href: ROUTES.FINANCEIRO.PAGAMENTOS, icon: <CreditCard size={17} /> },
+        { label: "Orçamentos", href: ROUTES.ANALISE.ORCAMENTOS,    icon: <Receipt size={17} /> },
       ],
     },
     {
