@@ -40,6 +40,7 @@ function buildNav(unreadCount: number): NavGroup[] {
         { label: "Categorias",   href: ROUTES.GESTAO.CATEGORIAS,  icon: <Tag size={17} /> },
         { label: "Supervisores", href: ROUTES.GESTAO.SUPERVISORES, icon: <UserCheck size={17} /> },
         { label: "Campanhas",    href: ROUTES.GESTAO.CAMPANHAS,    icon: <Megaphone size={17} /> },
+        { label: "Promoções",    href: ROUTES.GESTAO.PROMOCOES,    icon: <Percent size={17} /> },
       ],
     },
     {
