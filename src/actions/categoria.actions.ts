@@ -44,11 +44,19 @@ export async function criarCategoria(formData: FormData): Promise<ActionResult<C
   }
 }
 
-export async function atualizarCategoria(formData: FormData): Promise<ActionResult<void>> {
+export async function atualizarCategoria(
+  id: number,
+  nome: string,
+  descricao: string,
+  foto?: File | null
+): Promise<ActionResult<void>> {
   try {
+    const fd = foto ? new FormData() : undefined;
+    if (fd && foto) fd.append("Foto", foto);
     await serverFetch(`/api/Categoria/update`, {
       method: "PUT",
-      formData,
+      params: { id, Nome: nome, Descricao: descricao },
+      ...(fd ? { formData: fd } : {}),
     });
     return { success: true, data: undefined };
   } catch (err: unknown) {
@@ -79,7 +87,10 @@ export async function criarSubcategoria(formData: FormData): Promise<ActionResul
 
 export async function atualizarSubcategoria(formData: FormData): Promise<ActionResult<void>> {
   try {
-    await serverFetch("/api/SubCategoria/update", { method: "PUT", formData });
+    await serverFetch("/api/SubCategoria/update", {
+      method: "PUT",
+      formData,
+    });
     return { success: true, data: undefined };
   } catch (err: unknown) {
     return { success: false, error: String(err) };

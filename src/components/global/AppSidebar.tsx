@@ -55,6 +55,7 @@ function buildNav(unreadCount: number): NavGroup[] {
       groupLabel: "Análise",
       links: [
         { label: "Pagamentos", href: ROUTES.FINANCEIRO.PAGAMENTOS, icon: <CreditCard size={17} /> },
+        { label: "Orçamentos", href: ROUTES.ANALISE.ORCAMENTOS,    icon: <Receipt size={17} /> },
       ],
     },
     {

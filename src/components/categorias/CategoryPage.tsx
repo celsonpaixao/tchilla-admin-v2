@@ -118,12 +118,7 @@ export function CategoryPage({ initialCategorias, slugOptions }: CategoryPagePro
   function handleEditCat() {
     if (!editTarget || !catNome.trim()) return;
     startTransition(async () => {
-      const fd = new FormData();
-      fd.append("Id", String(editTarget.id));
-      fd.append("Nome", catNome);
-      fd.append("Descricao", catDescricao);
-      if (catFoto) fd.append("Foto", catFoto);
-      const result = await atualizarCategoria(fd);
+      const result = await atualizarCategoria(editTarget.id, catNome, catDescricao, catFoto);
       if (result.success) {
         toast.success("Categoria atualizada!");
         setCategorias((prev) =>
