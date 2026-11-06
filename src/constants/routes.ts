@@ -1,5 +1,7 @@
 export const ROUTES = {
   LOGIN: "/login",
+  /** Apaga o cookie de um token inválido e redireciona para o login. */
+  SESSAO_EXPIRADA: "/api/auth/sessao-expirada",
   HOME: "/reservas/relatorio",
 
   RESERVAS: {
