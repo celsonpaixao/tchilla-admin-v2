@@ -1,45 +1,86 @@
 "use server";
 import { serverFetch } from "@/lib/api/server";
+import { mensagemDeErro, semVazios } from "@/lib/api/erros";
 import type { ActionResult, ApiResponse } from "@/types/common.types";
-import type { AgenciaData, AgenciaCreateRequest } from "@/types/agencia.types";
+import type { Paginado } from "@/types/payment.types";
+import type {
+  AgenciaData,
+  FiltroParceiros,
+  ParceiroAdmin,
+  ParceiroDetalhe,
+  ResumoParceiros,
+} from "@/types/agencia.types";
 
+/** Lista simples de agências (usada nas campanhas). */
 export async function fetchAgencias(): Promise<ActionResult<AgenciaData[]>> {
   try {
     const data = await serverFetch<ApiResponse<AgenciaData[]>>("/api/Agencia/getAll");
     return { success: true, data: data.data ?? [] };
   } catch (err: unknown) {
-    return { success: false, error: String(err) };
+    return { success: false, error: mensagemDeErro(err) };
   }
 }
 
-export async function criarAgencia(body: AgenciaCreateRequest): Promise<ActionResult<void>> {
+export async function fetchParceiros(
+  filtro: FiltroParceiros = {},
+): Promise<ActionResult<Paginado<ParceiroAdmin>>> {
   try {
-    await serverFetch("/api/Auth/register/agencia", { method: "POST", body });
-    // Enviar OTP após criar
-    await serverFetch("/api/Auth/verify-account", {
-      method: "POST",
-      body: { email: body.usuarioDto.email },
-    }).catch(() => {});
-    return { success: true, data: undefined };
+    const res = await serverFetch<ApiResponse<Paginado<ParceiroAdmin>>>("/api/Agencia/admin", {
+      params: semVazios(filtro),
+    });
+    return { success: true, data: res.data };
   } catch (err: unknown) {
-    return { success: false, error: String(err) };
+    return { success: false, error: mensagemDeErro(err) };
   }
 }
 
-export async function atualizarAgencia(id: number, body: Partial<AgenciaData>): Promise<ActionResult<void>> {
+export async function fetchResumoParceiros(): Promise<ActionResult<ResumoParceiros>> {
   try {
-    await serverFetch(`/api/Agencia/update/${id}`, { method: "PUT", body });
-    return { success: true, data: undefined };
+    const res = await serverFetch<ApiResponse<ResumoParceiros>>("/api/Agencia/admin/resumo");
+    return { success: true, data: res.data };
   } catch (err: unknown) {
-    return { success: false, error: String(err) };
+    return { success: false, error: mensagemDeErro(err) };
   }
 }
 
-export async function deletarAgencia(id: number): Promise<ActionResult<void>> {
+export async function fetchParceiro(id: number): Promise<ActionResult<ParceiroDetalhe>> {
   try {
-    await serverFetch(`/api/Agencia/delete/${id}`, { method: "DELETE" });
-    return { success: true, data: undefined };
+    const res = await serverFetch<ApiResponse<ParceiroDetalhe>>(`/api/Agencia/admin/${id}`);
+    return { success: true, data: res.data };
   } catch (err: unknown) {
-    return { success: false, error: String(err) };
+    return { success: false, error: mensagemDeErro(err) };
+  }
+}
+
+export async function aprovarParceiro(id: number): Promise<ActionResult<ParceiroAdmin>> {
+  try {
+    const res = await serverFetch<ApiResponse<ParceiroAdmin>>(`/api/Agencia/admin/${id}/aprovar`, { method: "PUT" });
+    return { success: true, data: res.data };
+  } catch (err: unknown) {
+    return { success: false, error: mensagemDeErro(err) };
+  }
+}
+
+export async function rejeitarParceiro(id: number, motivo: string): Promise<ActionResult<ParceiroAdmin>> {
+  try {
+    const res = await serverFetch<ApiResponse<ParceiroAdmin>>(`/api/Agencia/admin/${id}/rejeitar`, {
+      method: "PUT",
+      body: { motivo },
+    });
+    return { success: true, data: res.data };
+  } catch (err: unknown) {
+    return { success: false, error: mensagemDeErro(err) };
+  }
+}
+
+export async function suspenderParceiro(id: number, motivo: string): Promise<ActionResult<ParceiroAdmin>> {
+  try {
+    const res = await serverFetch<ApiResponse<ParceiroAdmin>>(`/api/Agencia/admin/${id}/suspender`, {
+      method: "PUT",
+      body: { motivo },
+    });
+    return { success: true, data: res.data };
+  } catch (err: unknown) {
+    return { success: false, error: mensagemDeErro(err) };
   }
 }

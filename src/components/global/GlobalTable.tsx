@@ -14,13 +14,41 @@ import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, Sear
 import { cn } from "@/lib/utils";
 import { PAGINATION_SIZE } from "@/constants/app.constants";
 
+export interface ServerPagination {
+  /** Página atual, começa em 1. */
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
 interface GlobalTableProps<T> {
   data: T[];
   columns: ColumnDef<T, unknown>[];
   searchPlaceholder?: string;
   pageSize?: number;
   isLoading?: boolean;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
+  /** Conteúdo extra na barra da tabela (filtros). */
+  toolbar?: React.ReactNode;
+  /**
+   * Paginação feita no servidor: `data` é só a página atual. A pesquisa local é
+   * escondida (a pesquisa deve ir no `toolbar`, também no servidor).
+   */
+  serverPagination?: ServerPagination;
+}
+
+function paginasVisiveis(atual: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const paginas: (number | "…")[] = [1];
+  const inicio = Math.max(2, atual - 1);
+  const fim = Math.min(total - 1, atual + 1);
+  if (inicio > 2) paginas.push("…");
+  for (let p = inicio; p <= fim; p++) paginas.push(p);
+  if (fim < total - 1) paginas.push("…");
+  paginas.push(total);
+  return paginas;
 }
 
 function SkeletonRow({ columns }: { columns: number }) {
@@ -42,9 +70,12 @@ export function GlobalTable<T>({
   pageSize = PAGINATION_SIZE,
   isLoading,
   emptyMessage = "Nenhum resultado encontrado.",
+  toolbar,
+  serverPagination,
 }: GlobalTableProps<T>) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
+  const server = serverPagination;
 
   const table = useReactTable({
     data,
@@ -54,9 +85,11 @@ export function GlobalTable<T>({
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: server ? undefined : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    initialState: { pagination: { pageSize } },
+    manualPagination: !!server,
+    pageCount: server?.totalPages,
+    initialState: { pagination: { pageSize: server?.pageSize ?? pageSize } },
   });
 
   const { pageIndex, pageSize: ps } = table.getState().pagination;
@@ -77,6 +110,7 @@ export function GlobalTable<T>({
             borderBottom: "1px solid var(--border)",
           }}
         >
+          {!server && (
           <div className="relative flex-1 max-w-xs">
             <Search
               size={14}
@@ -100,10 +134,13 @@ export function GlobalTable<T>({
               onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
             />
           </div>
+          )}
+          {toolbar}
         </div>
 
       {/* Tabela */}
-      <div className="overflow-x-auto">
+      {/* relative: elementos absolutos (ex.: sr-only) ficam presos ao scroll e não alargam a página */}
+      <div className="overflow-x-auto relative">
         <table className="w-full border-collapse">
           <thead>
             {table.getHeaderGroups().map((hg) => (
@@ -139,17 +176,7 @@ export function GlobalTable<T>({
               Array.from({ length: 5 }).map((_, i) => (
                 <SkeletonRow key={i} columns={columns.length} />
               ))
-            ) : table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="text-center"
-                  style={{ padding: "48px var(--pad-x)", fontSize: "var(--font-sm)", color: "var(--text-3)" }}
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
+            ) : table.getRowModel().rows.length === 0 ? null : (
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
@@ -179,8 +206,83 @@ export function GlobalTable<T>({
         </table>
       </div>
 
+      {/* Vazio fora da área com scroll horizontal — em ecrãs estreitos fica sempre visível */}
+      {!isLoading && table.getRowModel().rows.length === 0 && (
+        <div
+          className="text-center"
+          style={{
+            padding: "40px var(--pad-x)",
+            borderTop: "1px solid var(--border)",
+            fontSize: "var(--font-sm)",
+            color: "var(--text-3)",
+          }}
+        >
+          {emptyMessage}
+        </div>
+      )}
+
+      {/* tbl-foot — paginação no servidor */}
+      {server && server.totalPages > 1 && (
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: "var(--gap)",
+            padding: "7px var(--pad-x)",
+            borderTop: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            fontSize: "var(--font-sm)",
+            color: "var(--text-3)",
+          }}
+        >
+          <p style={{ fontVariantNumeric: "tabular-nums" }}>
+            {(server.page - 1) * server.pageSize + 1}–{Math.min(server.page * server.pageSize, server.totalItems)} de {server.totalItems}
+          </p>
+          <nav aria-label="Paginação" style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: "auto" }}>
+            <button
+              onClick={() => server.onPageChange(server.page - 1)}
+              disabled={server.page <= 1 || isLoading}
+              aria-label="Página anterior"
+              className="flex items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-40"
+              style={{ width: "var(--control-h-sm)", height: "var(--control-h-sm)", color: "var(--text-2)" }}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {paginasVisiveis(server.page, server.totalPages).map((p, i) =>
+              p === "…" ? (
+                <span key={`gap-${i}`} style={{ width: "var(--control-h-sm)", textAlign: "center" }}>…</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => server.onPageChange(p)}
+                  disabled={isLoading}
+                  aria-current={p === server.page ? "page" : undefined}
+                  className="flex items-center justify-center rounded-lg font-medium transition-colors cursor-pointer"
+                  style={{
+                    width: "var(--control-h-sm)", height: "var(--control-h-sm)",
+                    fontSize: "var(--font-sm)",
+                    ...(p === server.page
+                      ? { background: "var(--blue)", color: "var(--navy)", fontWeight: 700 }
+                      : { color: "var(--text-2)" }),
+                  }}
+                >
+                  {p}
+                </button>
+              ),
+            )}
+            <button
+              onClick={() => server.onPageChange(server.page + 1)}
+              disabled={server.page >= server.totalPages || isLoading}
+              aria-label="Página seguinte"
+              className="flex items-center justify-center rounded-lg transition-colors cursor-pointer disabled:opacity-40"
+              style={{ width: "var(--control-h-sm)", height: "var(--control-h-sm)", color: "var(--text-2)" }}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </nav>
+        </div>
+      )}
+
       {/* tbl-foot — conforme DS */}
-      {totalRows > ps && (
+      {!server && totalRows > ps && (
         <div
           style={{
             display: "flex", alignItems: "center", gap: "var(--gap)",
