@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ROUTES } from "@/constants/routes";
 
 // Axios client para chamadas client-side (via proxy do Next.js)
 export const apiClient = axios.create({
@@ -12,7 +13,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = "/login";
+      window.location.href = ROUTES.SESSAO_EXPIRADA;
     }
     return Promise.reject(error);
   }

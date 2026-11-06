@@ -56,7 +56,7 @@ export async function serverFetch<T>(
   });
 
   if (res.status === 401) {
-    redirect(ROUTES.LOGIN);
+    redirect(ROUTES.SESSAO_EXPIRADA);
   }
 
   if (!res.ok) {

@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   const user = await getSession();
 
   if (!user) {
-    redirect(ROUTES.LOGIN);
+    redirect(ROUTES.SESSAO_EXPIRADA);
   }
 
   return (

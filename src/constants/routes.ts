@@ -1,5 +1,7 @@
 export const ROUTES = {
   LOGIN: "/login",
+  /** Apaga o cookie de um token inválido e redireciona para o login. */
+  SESSAO_EXPIRADA: "/api/auth/sessao-expirada",
   HOME: "/reservas/relatorio",
 
   RESERVAS: {
@@ -13,6 +15,7 @@ export const ROUTES = {
     SUPERVISORES: "/gestao/supervisores",
     CAMPANHAS: "/gestao/campanhas",
     PROMOCOES: "/gestao/promocoes",
+    ESPACOS: "/gestao/espacos",
   },
 
   USUARIOS: {
@@ -23,6 +26,7 @@ export const ROUTES = {
 
   FINANCEIRO: {
     PAGAMENTOS: "/financeiro/pagamentos",
+    COMISSOES: "/financeiro/comissoes",
   },
 
   ANALISE: {
