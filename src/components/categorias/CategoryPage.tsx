@@ -181,13 +181,14 @@ export function CategoryPage({ initialCategorias, slugOptions }: CategoryPagePro
     const { sub, cat } = subModal;
     startTransition(async () => {
       const fd = new FormData();
-      fd.append("Id", String(sub.id));
       fd.append("Nome", subNome);
       fd.append("Descricao", subDescricao);
       fd.append("Slug", subSlug);
       fd.append("Tipo", String(subTipo));
+      // O update grava sempre a categoria: sem isto a subcategoria ficava com categoriaid = 0.
+      fd.append("CategoriaId", String(cat.id));
       if (subFoto) fd.append("Foto", subFoto);
-      const result = await atualizarSubcategoria(fd);
+      const result = await atualizarSubcategoria(sub.id, fd);
       if (result.success) {
         toast.success("Subcategoria atualizada!");
         setSubcategorias((prev) => ({
