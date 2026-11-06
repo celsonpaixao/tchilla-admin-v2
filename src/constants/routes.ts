@@ -15,6 +15,7 @@ export const ROUTES = {
     SUPERVISORES: "/gestao/supervisores",
     CAMPANHAS: "/gestao/campanhas",
     PROMOCOES: "/gestao/promocoes",
+    ESPACOS: "/gestao/espacos",
   },
 
   USUARIOS: {
