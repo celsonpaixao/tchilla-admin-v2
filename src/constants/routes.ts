@@ -25,6 +25,7 @@ export const ROUTES = {
 
   FINANCEIRO: {
     PAGAMENTOS: "/financeiro/pagamentos",
+    COMISSOES: "/financeiro/comissoes",
   },
 
   ANALISE: {

@@ -23,6 +23,22 @@ const STATUS_STYLES: Record<string, React.CSSProperties> = {
     color: "var(--success-fg)",
     border: "1px solid var(--success-bd)",
   },
+  /* Pagamentos e comissões */
+  Pago: {
+    background: "var(--success-bg)",
+    color: "var(--success-fg)",
+    border: "1px solid var(--success-bd)",
+  },
+  Falhado: {
+    background: "var(--danger-bg)",
+    color: "var(--danger-fg)",
+    border: "1px solid var(--danger-bd)",
+  },
+  Rejeitado: {
+    background: "var(--danger-bg)",
+    color: "var(--danger-fg)",
+    border: "1px solid var(--danger-bd)",
+  },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -30,6 +46,10 @@ const STATUS_LABELS: Record<string, string> = {
   Confirmado: "Confirmado",
   Cancelado: "Cancelado",
   Concluido: "Concluído",
+  Pago: "Pago",
+  Falhado: "Falhado",
+  Rejeitado: "Rejeitado",
+  Cancelada: "Cancelada",
 };
 
 interface StatusBadgeProps {

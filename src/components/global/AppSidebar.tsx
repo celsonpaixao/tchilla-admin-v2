@@ -6,7 +6,7 @@ import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
   CreditCard, Settings, LogOut, Loader2, Menu, X,
   Tag, Megaphone, BarChart3, Percent,
-  Receipt,
+  Receipt, Coins,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
@@ -56,6 +56,7 @@ function buildNav(unreadCount: number): NavGroup[] {
       groupLabel: "Análise",
       links: [
         { label: "Pagamentos", href: ROUTES.FINANCEIRO.PAGAMENTOS, icon: <CreditCard size={17} /> },
+        { label: "Comissões",  href: ROUTES.FINANCEIRO.COMISSOES,  icon: <Coins size={17} /> },
         { label: "Orçamentos", href: ROUTES.ANALISE.ORCAMENTOS,    icon: <Receipt size={17} /> },
       ],
     },
