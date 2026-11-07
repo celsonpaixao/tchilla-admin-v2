@@ -10,8 +10,14 @@ import { GlobalButton } from "@/components/global/GlobalButton";
 import { StatusBadge } from "@/components/global/StatusBadge";
 import { CampoMotivo, ErroCarregamento } from "@/components/global/FiltrosUI";
 import { formatDate, formatDatetime } from "@/lib/utils";
+import { fetchAnunciosParceiro } from "@/actions/admin.actions";
+import type { AnunciosParceiro } from "@/types/admin.types";
+import { LinkInterno } from "@/components/admin/AdminUI";
+import { ROUTES } from "@/constants/routes";
 
 const MOTIVO_MIN = 5;
+
+const NOMES_ESTADO_ESPACO: Record<string, string> = { Rascunho: "Rascunho", EmRevisao: "Em revisão", Publicado: "Publicado", Suspenso: "Suspenso", Inativo: "Inativo" };
 
 type Acao = "aprovar" | "rejeitar" | "suspender";
 
@@ -81,6 +87,7 @@ function ListaAnuncios({ titulo, itens, total }: { titulo: string; itens: Parcei
 
 export function ParceiroDrawer({ parceiro, onClose, onDecidido }: ParceiroDrawerProps) {
   const [detalhe, setDetalhe] = useState<ParceiroDetalhe | null>(null);
+  const [anuncios, setAnuncios] = useState<AnunciosParceiro | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [aCarregar, setACarregar] = useState(false);
   const [acao, setAcao] = useState<Acao | null>(null);
@@ -96,12 +103,15 @@ export function ParceiroDrawer({ parceiro, onClose, onDecidido }: ParceiroDrawer
     setDetalhe(null);
     setErro(null);
     setACarregar(true);
+    setAnuncios(null);
     fetchParceiro(id).then((res) => {
       if (!ativo) return;
       if (res.success) setDetalhe(res.data);
       else setErro(res.error);
       setACarregar(false);
     });
+    // Mais completo (reservas por anúncio, suspensões, eventos); se falhar fica a lista do detalhe.
+    fetchAnunciosParceiro(id).then((res) => ativo && res.success && setAnuncios(res.data));
     return () => { ativo = false; };
   }, [id]);
 
@@ -229,13 +239,47 @@ export function ParceiroDrawer({ parceiro, onClose, onDecidido }: ParceiroDrawer
                 </div>
               )}
               {erro && <ErroCarregamento mensagem={erro} onRetry={() => { setErro(null); setDetalhe(null); fetchParceiro(p.id).then((r) => r.success ? setDetalhe(r.data) : setErro(r.error)); }} />}
-              {detalhe && (
+              {anuncios ? (
+                <div className="space-y-3">
+                  <ListaAnuncios
+                    titulo="Espaços"
+                    total={anuncios.espacos.length}
+                    itens={anuncios.espacos.map((e) => ({ id: e.id, nome: e.nome ?? "", estado: `${e.suspenso ? "Suspenso" : NOMES_ESTADO_ESPACO[e.estado] ?? e.estado} · ${e.reservas} reservas` }))}
+                  />
+                  <ListaAnuncios
+                    titulo="Serviços"
+                    total={anuncios.servicos.length}
+                    itens={anuncios.servicos.map((s) => ({ id: s.id, nome: s.nome ?? "", estado: `${s.reservas} reservas` }))}
+                  />
+                  <ListaAnuncios
+                    titulo="Combos"
+                    total={anuncios.combos.length}
+                    itens={anuncios.combos.map((c) => ({ id: c.id, nome: c.nome ?? "", estado: c.estado ?? "" }))}
+                  />
+                  {anuncios.eventos.length > 0 && (
+                    <ListaAnuncios
+                      titulo="Eventos"
+                      total={anuncios.eventos.length}
+                      itens={anuncios.eventos.map((e) => ({ id: e.id, nome: e.nome ?? "", estado: `${e.bilhetesVendidos} bilhetes` }))}
+                    />
+                  )}
+                </div>
+              ) : detalhe && (
                 <div className="space-y-3">
                   <ListaAnuncios titulo="Espaços" itens={detalhe.espacos} total={detalhe.anuncios.espacos} />
                   <ListaAnuncios titulo="Serviços" itens={detalhe.servicos} total={detalhe.anuncios.servicos} />
                   <ListaAnuncios titulo="Combos" itens={detalhe.combos} total={detalhe.anuncios.combos} />
                 </div>
               )}
+            </Seccao>
+
+            <Seccao titulo="Ver também">
+              <ul className="space-y-1.5 text-sm">
+                <li><LinkInterno href={`${ROUTES.RESERVAS.LISTAGEM}?agencia=${p.id}`}>Reservas deste parceiro</LinkInterno></li>
+                <li><LinkInterno href={`${ROUTES.GESTAO.CATALOGO}?agencia=${p.id}`}>Serviços no catálogo</LinkInterno></li>
+                <li><LinkInterno href={`${ROUTES.GESTAO.AVALIACOES}?agencia=${p.id}`}>Avaliações dos anúncios</LinkInterno></li>
+                <li><LinkInterno href={ROUTES.FINANCEIRO.POR_PARCEIRO}>Financeiro por parceiro</LinkInterno></li>
+              </ul>
             </Seccao>
           </div>
         )}
