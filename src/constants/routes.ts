@@ -8,6 +8,7 @@ export const ROUTES = {
     RELATORIO: "/reservas/relatorio",
     LISTAGEM: "/reservas/listagem",
     HISTORICO: "/reservas/historico",
+    DETALHE: (id: number) => `/reservas/${id}`,
   },
 
   GESTAO: {
@@ -16,17 +17,22 @@ export const ROUTES = {
     CAMPANHAS: "/gestao/campanhas",
     PROMOCOES: "/gestao/promocoes",
     ESPACOS: "/gestao/espacos",
+    CATALOGO: "/gestao/catalogo",
+    AVALIACOES: "/gestao/avaliacoes",
+    CONVITES: "/gestao/convites",
   },
 
   USUARIOS: {
     CLIENTES: "/usuarios/clientes",
     PARCEIROS: "/usuarios/parceiros",
     RELATORIO: "/usuarios/relatorio",
+    DETALHE: (id: number) => `/usuarios/${id}`,
   },
 
   FINANCEIRO: {
     PAGAMENTOS: "/financeiro/pagamentos",
     COMISSOES: "/financeiro/comissoes",
+    POR_PARCEIRO: "/financeiro/parceiros",
   },
 
   ANALISE: {
