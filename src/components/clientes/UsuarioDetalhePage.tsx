@@ -1,7 +1,14 @@
 "use client";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { CalendarCheck, Heart, MailOpen, Star, Ticket, Wallet } from "lucide-react";
-import type { AtividadeUsuarioAdmin } from "@/types/admin.types";
+import type { AtividadeUsuarioAdmin, ImpedimentosApagarConta } from "@/types/admin.types";
+import { apagarConta, bloquearConta, desbloquearConta } from "@/actions/admin.actions";
 import { PageShell } from "@/components/global/PageShell";
+import { GlobalButton } from "@/components/global/GlobalButton";
+import { ConfirmModal } from "@/components/global/GlobalModal";
+import { AcaoComMotivo } from "@/components/admin/AcaoComMotivo";
 import { KPICard } from "@/components/global/KPICard";
 import { StatusBadge } from "@/components/global/StatusBadge";
 import { GlobalAvatar } from "@/components/global/GlobalAvatar";
@@ -12,27 +19,125 @@ import { ROUTES } from "@/constants/routes";
 
 const NOME_TIPO: Record<string, string> = { cliente: "Cliente", parceiro: "Parceiro", equipa: "Equipa" };
 
-export function UsuarioDetalhePage({ atividade }: { atividade: AtividadeUsuarioAdmin }) {
+/** Frase com o que ainda impede apagar a conta, ou null se nada impede. */
+function textoImpedimentos(i?: ImpedimentosApagarConta | null): string | null {
+  if (!i || i.nenhum) return null;
+  const partes: string[] = [];
+  const juntar = (n: number, um: string, varios: string) => { if (n > 0) partes.push(n === 1 ? um : `${n} ${varios}`); };
+  juntar(i.reservasFuturasComoCliente, "1 reserva por realizar como cliente", "reservas por realizar como cliente");
+  juntar(i.reservasFuturasNosAnuncios, "1 reserva por realizar nos anúncios", "reservas por realizar nos anúncios");
+  juntar(i.espacosPublicados, "1 espaço publicado", "espaços publicados");
+  juntar(i.servicosAtivos, "1 serviço", "serviços");
+  juntar(i.combosAtivos, "1 combo ativo", "combos ativos");
+  juntar(i.eventosFuturos, "1 evento por realizar", "eventos por realizar");
+  return `Ainda não é possível apagar: tem ${partes.join(", ")}. Cancela as reservas e retira os anúncios primeiro.`;
+}
+
+interface UsuarioDetalhePageProps {
+  atividade: AtividadeUsuarioAdmin;
+  /** Papel da sessão: contas da equipa e apagar exigem Admin. */
+  papel: string | null;
+  /** ID da conta com sessão: ninguém se bloqueia nem se apaga a si próprio. */
+  eu: number | null;
+}
+
+export function UsuarioDetalhePage({ atividade, papel, eu }: UsuarioDetalhePageProps) {
+  const router = useRouter();
+  const [bloquear, setBloquear] = useState(false);
+  const [desbloquear, setDesbloquear] = useState(false);
+  const [apagar, setApagar] = useState(false);
+  const [aGravar, startGravar] = useTransition();
   const a = atividade;
-  const u = a.usuario;
+  // A resposta da ação atualiza logo o estado; o router.refresh() traz o resto da ficha depois.
+  const [m, setM] = useState(a.moderacao);
+  useEffect(() => setM(a.moderacao), [a.moderacao]);
+  const u = { ...a.usuario, bloqueado: m?.bloqueada ?? a.usuario.bloqueado };
   const nome = u.nome?.trim() || `Utilizador #${u.id}`;
   const pago = kzCompacto(a.reservasPagas.valor);
+  const eAdmin = papel === "Admin";
+  const propria = eu === u.id;
+  const podeModerar = !u.apagado && !propria && u.papel !== "Admin" && (u.tipo !== "equipa" || eAdmin);
+  const podeApagar = eAdmin && !u.anonimizado && !propria && u.papel !== "Admin";
+
+  async function confirmarBloqueio(motivo: string) {
+    const res = await bloquearConta(u.id, motivo);
+    if (!res.success) return res.error;
+    setM(res.data);
+    setBloquear(false);
+    toast.success(`Conta de ${nome} bloqueada`, { description: res.mensagem });
+    router.refresh();
+    return null;
+  }
+
+  function confirmarDesbloqueio() {
+    startGravar(async () => {
+      const res = await desbloquearConta(u.id);
+      if (!res.success) {
+        toast.error("Não foi possível desbloquear", { description: res.error });
+        return;
+      }
+      setM(res.data);
+      setDesbloquear(false);
+      toast.success(`Conta de ${nome} desbloqueada`, { description: res.mensagem });
+      router.refresh();
+    });
+  }
+
+  async function confirmarApagar(motivo: string) {
+    const res = await apagarConta(u.id, motivo);
+    if (!res.success) return res.error;
+    setApagar(false);
+    toast.success("Conta apagada e anonimizada", { description: res.mensagem });
+    router.refresh();
+    return null;
+  }
 
   return (
-    <PageShell title={nome} subtitle={`${NOME_TIPO[u.tipo]} · registado em ${formatDatetime(u.criadoEm)}`}>
+    <PageShell
+      title={nome}
+      subtitle={`${NOME_TIPO[u.tipo]} · registado em ${formatDatetime(u.criadoEm)}`}
+      actions={
+        <>
+          {podeModerar && (u.bloqueado
+            ? <GlobalButton variant="secondary" onClick={() => setDesbloquear(true)}>Desbloquear conta</GlobalButton>
+            : <GlobalButton variant="secondary" onClick={() => setBloquear(true)}>Bloquear conta</GlobalButton>)}
+          {podeApagar && <GlobalButton variant="ghost" onClick={() => setApagar(true)} style={{ color: "var(--danger-fg)" }}>Apagar conta</GlobalButton>}
+        </>
+      }
+    >
       <Migalhas itens={[{ label: "Clientes", href: ROUTES.USUARIOS.CLIENTES }, { label: nome }]} />
 
       <div className="flex items-center gap-3 flex-wrap">
         <GlobalAvatar src={u.foto} name={nome} size="lg" />
         <div className="flex items-center gap-2 flex-wrap">
           <Etiqueta tom={u.tipo === "equipa" ? "info" : "neutro"}>{NOME_TIPO[u.tipo]}</Etiqueta>
-          {u.apagado ? <Etiqueta tom="perigo">Conta apagada</Etiqueta> : u.verificado ? <Etiqueta tom="sucesso">Verificada</Etiqueta> : <Etiqueta tom="aviso">Por verificar</Etiqueta>}
+          {u.anonimizado ? <Etiqueta tom="perigo">Apagada e anonimizada</Etiqueta> : u.apagado ? <Etiqueta tom="perigo">Conta apagada</Etiqueta> : u.verificado ? <Etiqueta tom="sucesso">Verificada</Etiqueta> : <Etiqueta tom="aviso">Por verificar</Etiqueta>}
+          {u.bloqueado && <Etiqueta tom="perigo">Bloqueada</Etiqueta>}
           {u.google && <Etiqueta>Entra com Google</Etiqueta>}
           {u.agenciaId && (
             <LinkInterno href={`${ROUTES.USUARIOS.PARCEIROS}?tab=todos&q=${encodeURIComponent(u.email ?? nome)}`}>Ver perfil de parceiro</LinkInterno>
           )}
         </div>
       </div>
+
+      {m?.bloqueada && (
+        <div role="note" className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--danger-bg)", border: "1px solid var(--danger-bd)", color: "var(--danger-fg)" }}>
+          <p className="font-semibold">
+            Bloqueada{m.atualizadoPor?.nome ? ` por ${m.atualizadoPor.nome}` : ""}{m.atualizadoEm ? ` · ${formatDatetime(m.atualizadoEm)}` : ""}
+          </p>
+          {m.motivo && <p className="mt-0.5">{m.motivo}</p>}
+          <p className="text-xs mt-1">Não consegue entrar na app nem no portal, e as sessões abertas deixaram de funcionar.</p>
+        </div>
+      )}
+      {m?.anonimizada && (
+        <div role="note" className="rounded-xl px-4 py-3 text-sm" style={{ background: "var(--gray-100)", border: "1px solid var(--border)", color: "var(--text-2)" }}>
+          <p className="font-semibold" style={{ color: "var(--text)" }}>
+            Apagada e anonimizada{m.anonimizadoPor?.nome ? ` por ${m.anonimizadoPor.nome}` : ""}{m.anonimizadoEm ? ` · ${formatDatetime(m.anonimizadoEm)}` : ""}
+          </p>
+          {m.motivoApagar && <p className="mt-0.5">{m.motivoApagar}</p>}
+          <p className="text-xs mt-1">Os dados pessoais saíram da conta. As reservas e os pagamentos ficam no histórico.</p>
+        </div>
+      )}
 
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
         <KPICard label={`Reservas · ${a.reservasPagas.quantidade} pagas`} value={a.reservasTotal.quantidade} icon={<CalendarCheck size={16} />} />
@@ -108,6 +213,7 @@ export function UsuarioDetalhePage({ atividade }: { atividade: AtividadeUsuarioA
                         {v.alvo ? `${NOMES_ALVO[v.alvo]} #${v.alvoId}` : "—"} · <DataCurta valor={v.criadoEm} />
                       </span>
                       {v.apagada && <Etiqueta>Apagada pelo cliente</Etiqueta>}
+                      {v.oculta && <Etiqueta tom="aviso">Oculta pela equipa</Etiqueta>}
                     </span>
                     {v.mensagem && <span className="block" style={{ color: "var(--text-2)" }}>{v.mensagem}</span>}
                   </li>
@@ -146,6 +252,47 @@ export function UsuarioDetalhePage({ atividade }: { atividade: AtividadeUsuarioA
           </Cartao>
         </div>
       </div>
+
+      <AcaoComMotivo
+        aberto={bloquear}
+        onFechar={() => setBloquear(false)}
+        titulo={`Bloquear a conta de ${nome}?`}
+        descricao={
+          "Deixa logo de conseguir entrar, e as sessões abertas param de funcionar. Recebe o motivo por email. " +
+          (u.tipo === "parceiro" ? "Os anúncios continuam na app: para os tirar, suspende os espaços. " : "") +
+          "Podes desbloquear depois."
+        }
+        rotulo="Bloquear conta"
+        perigo
+        ajuda="O titular recebe este texto por email."
+        placeholder="Ex.: várias reservas falsas feitas com esta conta."
+        onConfirmar={confirmarBloqueio}
+      />
+
+      <ConfirmModal
+        open={desbloquear}
+        onOpenChange={(o) => !o && setDesbloquear(false)}
+        title={`Desbloquear a conta de ${nome}?`}
+        description="Volta a poder entrar na app e no portal, e recebe um email a dizê-lo."
+        onConfirm={confirmarDesbloqueio}
+        loading={aGravar}
+        confirmLabel="Desbloquear conta"
+        confirmVariant="primary"
+      />
+
+      <AcaoComMotivo
+        aberto={apagar}
+        onFechar={() => setApagar(false)}
+        titulo={`Apagar a conta de ${nome}?`}
+        descricao={`Tira da conta o nome, o email, o telefone, a foto e a ligação ao Google${u.agenciaId ? ", e do perfil de parceiro o NIF, o IBAN e a morada" : ""}. As ${a.reservasTotal.quantidade} reservas e os pagamentos ficam no histórico, sem os dados pessoais. Não se desfaz.`}
+        rotulo="Apagar e anonimizar"
+        perigo
+        ajuda="Fica registado; o titular não é avisado."
+        placeholder="Ex.: o titular pediu para apagar os dados."
+        confirmarCom="APAGAR"
+        impedimento={textoImpedimentos(a.impedimentosApagar)}
+        onConfirmar={confirmarApagar}
+      />
     </PageShell>
   );
 }

@@ -3,6 +3,7 @@ import { PAGE_SIZE, dataIso, opcao, pagina, texto, type SearchParams } from "@/c
 
 export const TABS_USUARIOS = [
   { id: "ativos", label: "Ativos" },
+  { id: "bloqueados", label: "Bloqueados" },
   { id: "apagados", label: "Apagados" },
   { id: "todos", label: "Todos" },
 ] as const;

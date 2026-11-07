@@ -40,6 +40,7 @@ export const ROUTES = {
   },
 
   CONFIGURACOES: "/configuracoes",
+  AUDITORIA: "/auditoria",
 } as const;
 
 export const PUBLIC_ROUTES = [ROUTES.LOGIN];

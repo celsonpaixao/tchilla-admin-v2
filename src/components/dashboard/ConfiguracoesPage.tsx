@@ -17,6 +17,8 @@ import { TaxasPlataforma } from "./TaxasPlataforma";
 interface ConfiguracoesPageProps {
   user: UsuarioInterface | null;
   configuracoes?: ActionResult<ConfiguracoesPlataforma>;
+  /** Papel da sessão: alterar as taxas exige Admin. */
+  papel?: string | null;
 }
 
 /* ── Segmented control (style idêntico ao twk-seg do DS) ─────── */
@@ -162,7 +164,7 @@ const S = {
 };
 
 /* ── Página ───────────────────────────────────────────────────── */
-export function ConfiguracoesPage({ user, configuracoes }: ConfiguracoesPageProps) {
+export function ConfiguracoesPage({ user, configuracoes, papel }: ConfiguracoesPageProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const {
@@ -258,7 +260,7 @@ export function ConfiguracoesPage({ user, configuracoes }: ConfiguracoesPageProp
             </div>
           </div>
 
-          <TaxasPlataforma config={configuracoes?.success ? configuracoes.data : null} erro={configuracoes && !configuracoes.success ? configuracoes.error : undefined} />
+          <TaxasPlataforma config={configuracoes?.success ? configuracoes.data : null} erro={configuracoes && !configuracoes.success ? configuracoes.error : undefined} podeAlterar={papel === "Admin"} />
 
           {/* Sair */}
           <button

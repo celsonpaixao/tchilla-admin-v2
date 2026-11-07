@@ -11,6 +11,13 @@ const LIMITES: Record<FaixaNota, [number | undefined, number | undefined]> = {
   positivas: [4, 5],
 };
 
+export const VISIBILIDADES = ["todas", "visiveis", "ocultas"] as const;
+export type Visibilidade = (typeof VISIBILIDADES)[number];
+
+export function visibilidade(params: SearchParams): Visibilidade {
+  return opcao(params.vis, VISIBILIDADES) ?? "todas";
+}
+
 export function faixaNota(params: SearchParams): FaixaNota {
   return opcao(params.nota, FAIXAS_NOTA) ?? "todas";
 }
@@ -24,6 +31,7 @@ export function filtroAvaliacoes(params: SearchParams): FiltroAvaliacoesAdmin {
     agenciaId: inteiro(params.agencia),
     usuarioId: inteiro(params.usuario),
     incluirApagadas: um(params.apagadas) === "1" || undefined,
+    ocultas: { todas: undefined, visiveis: false, ocultas: true }[visibilidade(params)],
     pesquisa: texto(params.q),
     de: dataIso(params.de),
     ate: dataIso(params.ate),
