@@ -6,7 +6,7 @@ import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
   CreditCard, Settings, LogOut, Loader2, Menu, X,
   Tag, Megaphone, BarChart3, Percent,
-  Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake,
+  Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake, ScrollText,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
@@ -70,6 +70,7 @@ function buildNav(unreadCount: number): NavGroup[] {
       groupLabel: "Sistema",
       links: [
         { label: "Definições", href: ROUTES.CONFIGURACOES, icon: <Settings size={17} /> },
+        { label: "Auditoria",  href: ROUTES.AUDITORIA,     icon: <ScrollText size={17} /> },
       ],
     },
   ];

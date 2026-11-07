@@ -5,6 +5,7 @@ import { ReservaDetalhePage } from "@/components/reservas/ReservaDetalhePage";
 import { ErroDetalhe } from "@/components/admin/ErroDetalhe";
 import { inteiro, um, type SearchParams } from "@/components/admin/params";
 import { ROUTES } from "@/constants/routes";
+import { papelDaSessao } from "@/lib/auth/papel";
 
 export const metadata: Metadata = { title: "Reserva" };
 
@@ -20,10 +21,10 @@ export default async function ReservaPage({
 
   const voltar = um((await searchParams).voltar);
   const destino = voltar === ROUTES.RESERVAS.HISTORICO ? ROUTES.RESERVAS.HISTORICO : ROUTES.RESERVAS.LISTAGEM;
-  const res = await fetchReservaAdmin(id);
+  const [res, papel] = await Promise.all([fetchReservaAdmin(id), papelDaSessao()]);
 
   if (!res.success) {
     return <ErroDetalhe titulo={`Reserva #${id}`} mensagem={res.error} voltar={{ label: "Voltar às reservas", href: destino }} />;
   }
-  return <ReservaDetalhePage reserva={res.data} voltar={destino} />;
+  return <ReservaDetalhePage reserva={res.data} voltar={destino} papel={papel} />;
 }

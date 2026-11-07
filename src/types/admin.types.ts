@@ -1,5 +1,8 @@
 /** Tipos das rotas de administração (fase 1): reservas, utilizadores, avaliações, catálogo, convites e plataforma. */
 
+/** Resultado de uma ação de escrita: os dados novos e a mensagem do back-end (diz o que aconteceu a seguir). */
+export type ResultadoEscrita<T> = { success: true; data: T; mensagem: string } | { success: false; error: string };
+
 export interface PessoaAdmin {
   id: number;
   nome?: string | null;
@@ -95,7 +98,48 @@ export interface ReservaAdminDetalhe extends ReservaAdminLinha {
   itensAdicionais: ItemReservado[];
   pagamentos: PagamentoResumo[];
   comissoes: { id: number; estado: string; valor: number; percentual: number; agenciaId: number; criadoEm: string }[];
-  avaliacoes: { id: number; nota: number; mensagem?: string | null; criadoEm: string; apagada: boolean }[];
+  avaliacoes: { id: number; nota: number; mensagem?: string | null; criadoEm: string; apagada: boolean; oculta: boolean }[];
+  /** Preenchido quando a equipa cancelou a reserva pelo painel. */
+  cancelamento?: CancelamentoReserva | null;
+  reembolsos: Reembolso[];
+  reembolso: SaldoReembolso;
+}
+
+export interface CancelamentoReserva {
+  motivo: string;
+  estadoAnterior: string;
+  estavaPaga: boolean;
+  canceladoEm: string;
+  canceladoPor?: PessoaAdmin | null;
+}
+
+export type MetodoReembolso = "Transferencia" | "Momenu" | "Numerario" | "Outro";
+
+export interface Reembolso {
+  id: number;
+  reservaId: number;
+  valor: number;
+  metodo: MetodoReembolso;
+  referencia?: string | null;
+  nota?: string | null;
+  reembolsadoEm: string;
+  registadoEm: string;
+  registadoPor?: PessoaAdmin | null;
+}
+
+export interface SaldoReembolso {
+  pago: number;
+  reembolsado: number;
+  porReembolsar: number;
+}
+
+export interface RegistarReembolso {
+  valor: number;
+  metodo: MetodoReembolso;
+  referencia?: string;
+  nota?: string;
+  /** ISO; por omissão, agora. */
+  reembolsadoEm?: string;
 }
 
 export interface PagamentoResumo {
@@ -128,7 +172,7 @@ export type TipoUsuarioAdmin = "cliente" | "parceiro" | "equipa";
 export interface FiltroUsuariosAdmin {
   pesquisa?: string;
   tipo?: TipoUsuarioAdmin;
-  estado?: "ativos" | "apagados" | "todos";
+  estado?: "ativos" | "bloqueados" | "apagados" | "todos";
   de?: string;
   ate?: string;
   ordem?: "recentes" | "nome" | "reservas";
@@ -148,6 +192,10 @@ export interface UsuarioAdmin {
   google: boolean;
   verificado: boolean;
   apagado: boolean;
+  /** Bloqueada pela equipa: não entra nem usa a API. */
+  bloqueado: boolean;
+  /** Apagada e sem dados pessoais (irreversível). */
+  anonimizado: boolean;
   agenciaId?: number | null;
   reservas: number;
 }
@@ -161,6 +209,7 @@ export interface ResumoUsuariosAdmin {
   comGoogle: number;
   verificados: number;
   apagados: number;
+  bloqueados: number;
   comReservas: number;
 }
 
@@ -178,12 +227,38 @@ export interface AtividadeUsuarioAdmin {
     alvoId?: number | null;
     criadoEm: string;
     apagada: boolean;
+    oculta: boolean;
   }[];
   avaliacoes: number;
   favoritos: number;
   comprasBilhetes: number;
   convites: number;
   ultimaReservaEm?: string | null;
+  /** Bloqueio e anonimização; vazio se a equipa nunca mexeu na conta. */
+  moderacao?: EstadoModeracaoConta | null;
+  /** O que impede apagar a conta agora (vazio se já está apagada). */
+  impedimentosApagar?: ImpedimentosApagarConta | null;
+}
+
+export interface EstadoModeracaoConta {
+  bloqueada: boolean;
+  motivo?: string | null;
+  atualizadoEm?: string | null;
+  atualizadoPor?: PessoaAdmin | null;
+  anonimizada: boolean;
+  anonimizadoEm?: string | null;
+  anonimizadoPor?: PessoaAdmin | null;
+  motivoApagar?: string | null;
+}
+
+export interface ImpedimentosApagarConta {
+  reservasFuturasComoCliente: number;
+  espacosPublicados: number;
+  servicosAtivos: number;
+  combosAtivos: number;
+  eventosFuturos: number;
+  reservasFuturasNosAnuncios: number;
+  nenhum: boolean;
 }
 
 /* ── Avaliações ───────────────────────────────────────────── */
@@ -197,6 +272,8 @@ export interface FiltroAvaliacoesAdmin {
   agenciaId?: number;
   usuarioId?: number;
   incluirApagadas?: boolean;
+  /** true: só as ocultas pela equipa; false: só as que a app mostra. */
+  ocultas?: boolean;
   pesquisa?: string;
   de?: string;
   ate?: string;
@@ -211,6 +288,10 @@ export interface AvaliacaoAdmin {
   criadoEm: string;
   atualizadoEm?: string | null;
   apagadaEm?: string | null;
+  /** Oculta pela equipa: não aparece na app nem conta para as médias. */
+  ocultaEm?: string | null;
+  ocultaMotivo?: string | null;
+  ocultaPor?: PessoaAdmin | null;
   cliente?: PessoaAdmin | null;
   alvo?: AlvoAvaliacao | null;
   alvoId?: number | null;
@@ -226,6 +307,7 @@ export interface ResumoAvaliacoesAdmin {
   porAlvo: Contagem[];
   negativas: number;
   apagadas: number;
+  ocultas: number;
   pioresAnuncios: { alvo: AlvoAvaliacao; alvoId: number; nome?: string | null; avaliacoes: number; media: number }[];
 }
 
@@ -405,6 +487,69 @@ export interface ConfiguracoesPlataforma {
   transferenciaAtiva: boolean;
   momenuAmbienteQa: boolean;
   toleranciaWebhookSegundos: number;
-  origem: string;
+  /** painel (um Admin alterou alguma taxa) ou appsettings. */
+  origem: "painel" | "appsettings";
+  atualizadoEm?: string | null;
+  atualizadoPor?: PessoaAdmin | null;
   ambiente: string;
+  limites: LimiteTaxa[];
+  historico: AlteracaoTaxa[];
+}
+
+export type ChaveTaxa = "TaxaClientePercent" | "ComissaoParceiroPercent" | "TaxaProcessamentoPercent" | "ComissaoTransferenciaPercent";
+
+export interface LimiteTaxa {
+  chave: ChaveTaxa;
+  nome: string;
+  min: number;
+  max: number;
+  inteiro: boolean;
+}
+
+export interface AlteracaoTaxa {
+  id: number;
+  chave: ChaveTaxa;
+  valorAnterior: number;
+  valorNovo: number;
+  nota: string;
+  alteradoEm: string;
+  alteradoPor?: PessoaAdmin | null;
+}
+
+export interface AlterarTaxas {
+  taxaClientePercent?: number;
+  comissaoParceiroPercent?: number;
+  taxaProcessamentoPercent?: number;
+  comissaoTransferenciaPercent?: number;
+  nota: string;
+}
+
+/* ── Auditoria ────────────────────────────────────────────── */
+
+export interface FiltroAuditoriaAdmin {
+  usuarioId?: number;
+  recurso?: string;
+  resultado?: "sucesso" | "erro";
+  alvoId?: number;
+  de?: string;
+  ate?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface AuditoriaAdmin {
+  id: number;
+  membro?: PessoaAdmin | null;
+  papel?: string | null;
+  metodo: string;
+  caminho: string;
+  recurso: string;
+  acao: string;
+  descricao?: string | null;
+  /** IDs e estados envolvidos (ex.: { reservaId: "36" }). */
+  alvo: Record<string, string>;
+  estadoHttp: number;
+  sucesso: boolean;
+  duracaoMs?: number | null;
+  criadoEm: string;
 }

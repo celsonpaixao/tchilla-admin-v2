@@ -1,15 +1,12 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BadgeCheck, CalendarCheck, Trash2, UserPlus, Users } from "lucide-react";
-import { toast } from "sonner";
+import { BadgeCheck, CalendarCheck, UserPlus, Users } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ActionResult } from "@/types/common.types";
 import type { Paginado } from "@/types/payment.types";
 import type { FiltroUsuariosAdmin, ResumoUsuariosAdmin, UsuarioAdmin } from "@/types/admin.types";
-import { deletarCliente } from "@/actions/cliente.actions";
 import { GlobalTable } from "@/components/global/GlobalTable";
-import { ConfirmModal } from "@/components/global/GlobalModal";
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { PageShell } from "@/components/global/PageShell";
 import { KPICard } from "@/components/global/KPICard";
@@ -24,18 +21,14 @@ interface ClientesPageProps {
   filtro: FiltroUsuariosAdmin;
   lista: ActionResult<Paginado<UsuarioAdmin>>;
   resumo: ActionResult<ResumoUsuariosAdmin>;
-  /** O utilizador ligado é Admin (apagar contas exige Admin). */
-  podeApagar: boolean;
 }
 
 const NOME_TIPO: Record<string, string> = { cliente: "Cliente", parceiro: "Parceiro", equipa: "Equipa" };
 
-export function ClientesPage({ tab, filtro, lista, resumo, podeApagar }: ClientesPageProps) {
+export function ClientesPage({ tab, filtro, lista, resumo }: ClientesPageProps) {
   const { atualizar, recarregar, isPending, queryAtual } = useFiltrosUrl();
   const [pesquisa, setPesquisa] = usePesquisaServidor(filtro.pesquisa, atualizar, queryAtual);
   const [linhas, setLinhas] = useState<UsuarioAdmin[]>(lista.success ? lista.data.data : []);
-  const [apagarAlvo, setApagarAlvo] = useState<UsuarioAdmin | null>(null);
-  const [aGravar, startGravar] = useTransition();
 
   useEffect(() => setLinhas(lista.success ? lista.data.data : []), [lista]);
 
@@ -43,21 +36,6 @@ export function ClientesPage({ tab, filtro, lista, resumo, podeApagar }: Cliente
   const r = resumo.success ? resumo.data : null;
   const clientes = r?.porTipo.find((t) => t.chave === "cliente")?.quantidade ?? 0;
   const comFiltros = !!(filtro.pesquisa || filtro.de || filtro.ate);
-
-  function apagar() {
-    if (!apagarAlvo) return;
-    const alvo = apagarAlvo;
-    startGravar(async () => {
-      const res = await deletarCliente(alvo.id);
-      if (!res.success) {
-        toast.error("Não foi possível apagar a conta", { description: res.error });
-        return;
-      }
-      setApagarAlvo(null);
-      toast.success(`Conta de ${alvo.nome ?? `#${alvo.id}`} apagada`, { description: "Passa para o separador Apagados." });
-      recarregar();
-    });
-  }
 
   const columns: ColumnDef<UsuarioAdmin, unknown>[] = [
     {
@@ -84,7 +62,8 @@ export function ClientesPage({ tab, filtro, lista, resumo, podeApagar }: Cliente
       accessorKey: "verificado",
       header: "Conta",
       cell: ({ row }) =>
-        row.original.apagado ? <Etiqueta tom="perigo">Apagada</Etiqueta> :
+        row.original.apagado ? <Etiqueta tom="perigo">{row.original.anonimizado ? "Anonimizada" : "Apagada"}</Etiqueta> :
+        row.original.bloqueado ? <Etiqueta tom="perigo">Bloqueada</Etiqueta> :
         row.original.verificado ? <Etiqueta tom="sucesso">Verificada</Etiqueta> :
         <Etiqueta tom="aviso">Por verificar</Etiqueta>,
     },
@@ -94,22 +73,6 @@ export function ClientesPage({ tab, filtro, lista, resumo, podeApagar }: Cliente
       cell: ({ getValue }) => <Numero valor={getValue() as number} />,
     },
     { accessorKey: "criadoEm", header: "Registo", cell: ({ getValue }) => <DataCurta valor={getValue() as string} /> },
-    {
-      id: "acoes",
-      header: () => <span className="sr-only">Ações</span>,
-      cell: ({ row }) =>
-        podeApagar && !row.original.apagado && row.original.tipo === "cliente" ? (
-          <button
-            onClick={() => setApagarAlvo(row.original)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer"
-            style={{ color: "var(--danger-fg)" }}
-            aria-label={`Apagar a conta de ${row.original.nome ?? row.original.id}`}
-            title="Apagar conta"
-          >
-            <Trash2 size={14} />
-          </button>
-        ) : null,
-    },
   ];
 
   return (
@@ -132,7 +95,7 @@ export function ClientesPage({ tab, filtro, lista, resumo, podeApagar }: Cliente
         tabs={TABS_USUARIOS}
         ativa={tab}
         onChange={(id) => atualizar({ tab: id === "ativos" ? undefined : id })}
-        contadores={r ? { apagados: r.apagados } : undefined}
+        contadores={r ? { bloqueados: r.bloqueados, apagados: r.apagados } : undefined}
       />
 
       {!lista.success ? (
@@ -144,7 +107,7 @@ export function ClientesPage({ tab, filtro, lista, resumo, podeApagar }: Cliente
           isLoading={isPending}
           emptyMessage={
             <Vazio
-              mensagem={comFiltros ? "Nenhuma conta corresponde a esta pesquisa ou período." : tab === "apagados" ? "Não há contas apagadas." : "Ainda não há contas deste tipo."}
+              mensagem={comFiltros ? "Nenhuma conta corresponde a esta pesquisa ou período." : tab === "apagados" ? "Não há contas apagadas." : tab === "bloqueados" ? "Não há contas bloqueadas. Bloqueia-se uma conta na ficha do utilizador." : "Ainda não há contas deste tipo."}
               onLimpar={comFiltros ? () => { setPesquisa(""); atualizar({ q: undefined, de: undefined, ate: undefined }); } : undefined}
             />
           }
@@ -174,20 +137,6 @@ export function ClientesPage({ tab, filtro, lista, resumo, podeApagar }: Cliente
           }
         />
       )}
-
-      <ConfirmModal
-        open={!!apagarAlvo}
-        onOpenChange={(o) => !o && setApagarAlvo(null)}
-        title={apagarAlvo ? `Apagar a conta de ${apagarAlvo.nome ?? `#${apagarAlvo.id}`}?` : ""}
-        description={
-          apagarAlvo
-            ? `A conta deixa de poder entrar na app. As ${apagarAlvo.reservas} reservas e os pagamentos ficam guardados. Só um Admin o pode fazer.`
-            : ""
-        }
-        onConfirm={apagar}
-        loading={aGravar}
-        confirmLabel="Sim, apagar conta"
-      />
     </PageShell>
   );
 }
