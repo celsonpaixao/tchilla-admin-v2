@@ -85,10 +85,13 @@ export async function criarSubcategoria(formData: FormData): Promise<ActionResul
   }
 }
 
-export async function atualizarSubcategoria(formData: FormData): Promise<ActionResult<void>> {
+// O back-end lê o id da query string (como no atualizarCategoria); no formulário era ignorado e a
+// API respondia "Subcategoria não encontrada".
+export async function atualizarSubcategoria(id: number, formData: FormData): Promise<ActionResult<void>> {
   try {
     await serverFetch("/api/SubCategoria/update", {
       method: "PUT",
+      params: { id },
       formData,
     });
     return { success: true, data: undefined };
