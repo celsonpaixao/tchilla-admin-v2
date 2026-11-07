@@ -40,6 +40,10 @@ interface FormState {
   inicioEm: string;
   fimEm: string;
   servicoIds: number[];
+  extrasLivres: boolean;
+  obrigatorios: number[];
+  premioEscalao: string;
+  premioPercentual: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -54,7 +58,25 @@ const EMPTY_FORM: FormState = {
   inicioEm: "",
   fimEm: "",
   servicoIds: [],
+  extrasLivres: false,
+  obrigatorios: [],
+  premioEscalao: "",
+  premioPercentual: "100",
 };
+
+/** Escalões pagos do convite digital (os mesmos do back-end, EscaloesConvite). */
+const ESCALOES_CONVITE = [
+  { id: "ate25", label: "Até 25 convidados", preco: 3000 },
+  { id: "ate50", label: "Até 50 convidados", preco: 5500 },
+  { id: "ate100", label: "Até 100 convidados", preco: 9000 },
+  { id: "ilimitado", label: "Convidados ilimitados", preco: 15000 },
+];
+
+function textoPremio(p: { premioConviteRotulo?: string | null; premioConvitePercentual?: number | null }) {
+  if (!p.premioConviteRotulo) return null;
+  const pct = p.premioConvitePercentual ?? 100;
+  return `convite ${p.premioConviteRotulo.toLocaleLowerCase("pt")} ${pct >= 100 ? "grátis" : `com ${pct}% de desconto`}`;
+}
 
 function toDatetimeLocal(value?: string | null) {
   if (!value) return "";
@@ -120,6 +142,10 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
   const selectedEligibleCount = form.servicoIds.filter((id) =>
     !(form.alvoTipo === "servico" && id === Number(form.alvoId))
   ).length;
+  const obrigatoriosCount = form.obrigatorios.filter((id) => form.servicoIds.includes(id)).length;
+  const livresCount = Math.max(0, minimum - obrigatoriosCount);
+  // Com escolha livre, a lista pode ficar vazia; só não pode haver mais obrigatórios do que o mínimo.
+  const cumpreMinimo = obrigatoriosCount <= minimum && (form.extrasLivres || selectedEligibleCount >= minimum);
 
   function change<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -161,16 +187,31 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
       inicioEm: toDatetimeLocal(detalhe.inicioEm),
       fimEm: toDatetimeLocal(detalhe.fimEm),
       servicoIds: detalhe.servicosElegiveis.map((servico) => servico.id),
+      extrasLivres: !!detalhe.extrasLivres,
+      obrigatorios: detalhe.servicosElegiveis.filter((servico) => servico.obrigatorio).map((servico) => servico.id),
+      premioEscalao: detalhe.premioConviteEscalao ?? "",
+      premioPercentual: String(detalhe.premioConvitePercentual ?? 100),
     });
     setOpen(true);
   }
 
   function toggleServico(id: number) {
+    setForm((current) => {
+      const sai = current.servicoIds.includes(id);
+      return {
+        ...current,
+        servicoIds: sai ? current.servicoIds.filter((selectedId) => selectedId !== id) : [...current.servicoIds, id],
+        obrigatorios: sai ? current.obrigatorios.filter((selectedId) => selectedId !== id) : current.obrigatorios,
+      };
+    });
+  }
+
+  function toggleObrigatorio(id: number) {
     setForm((current) => ({
       ...current,
-      servicoIds: current.servicoIds.includes(id)
-        ? current.servicoIds.filter((selectedId) => selectedId !== id)
-        : [...current.servicoIds, id],
+      obrigatorios: current.obrigatorios.includes(id)
+        ? current.obrigatorios.filter((selectedId) => selectedId !== id)
+        : [...current.obrigatorios, id],
     }));
   }
 
@@ -203,8 +244,17 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
       toast.error("O mínimo de serviços extra tem de ser pelo menos 1.");
       return;
     }
-    if (selectedEligibleCount < minServicos) {
-      toast.error(`Selecione pelo menos ${minServicos} serviços elegíveis.`);
+    if (obrigatoriosCount > minServicos) {
+      toast.error(`Há ${obrigatoriosCount} serviços obrigatórios, mas o mínimo é ${minServicos}. Aumente o mínimo ou tire um obrigatório.`);
+      return;
+    }
+    if (!form.extrasLivres && selectedEligibleCount < minServicos) {
+      toast.error(`Selecione pelo menos ${minServicos} serviços elegíveis, ou deixe o cliente escolher qualquer serviço.`);
+      return;
+    }
+    const premioPercentual = Number(form.premioPercentual.replace(",", "."));
+    if (form.premioEscalao && (!Number.isFinite(premioPercentual) || premioPercentual <= 0 || premioPercentual > 100)) {
+      toast.error("O desconto no convite tem de estar entre 1 e 100% (100% = grátis).");
       return;
     }
     if (form.inicioEm && form.fimEm && new Date(form.fimEm) < new Date(form.inicioEm)) {
@@ -224,6 +274,10 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
       inicioEm: toIso(form.inicioEm),
       fimEm: toIso(form.fimEm),
       servicoIds: form.servicoIds,
+      extrasLivres: form.extrasLivres,
+      servicosObrigatorios: form.obrigatorios.filter((id) => form.servicoIds.includes(id)),
+      premioConviteEscalao: form.premioEscalao || null,
+      premioConvitePercentual: form.premioEscalao ? premioPercentual : null,
     };
 
     setIsSaving(true);
@@ -324,7 +378,8 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
                     </div>
                     <p className="mt-1 truncate text-xs" style={{ color: "var(--text-2)" }}>
                       {promocao.alvo?.tipo === "espaco" ? "Espaço" : "Serviço"}: {promocao.alvo?.nome ?? `#${promocao.alvo?.id}`}
-                      {" · "}{promocao.minServicosExtra} serviço(s) para desbloquear
+                      {" · "}{promocao.minServicosExtra} serviço(s) para desbloquear{promocao.extrasLivres ? ", à escolha do cliente" : ""}
+                      {textoPremio(promocao) && <>{" · "}+ {textoPremio(promocao)}</>}
                     </p>
                     <p className="mt-1 flex items-center gap-1 text-[11px]" style={{ color: "var(--text-3)" }}>
                       <CalendarDays size={12} /> {formatDate(promocao.inicioEm)} <span aria-hidden="true">→</span> {formatDate(promocao.fimEm)}
@@ -480,16 +535,36 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
           <section className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Serviços elegíveis</h3>
-                <p className="text-xs" style={{ color: "var(--text-3)" }}>Serviços que o cliente precisa contratar para desbloquear o desconto.</p>
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Serviços da promoção</h3>
+                <p className="text-xs" style={{ color: "var(--text-3)" }}>
+                  {form.extrasLivres
+                    ? "Marque como obrigatório o que o cliente tem de levar. Os outros da lista aparecem como sugestão."
+                    : "O cliente escolhe destes para desbloquear o desconto. Marque como obrigatório o que tem de levar."}
+                </p>
               </div>
               <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{
-                background: selectedEligibleCount >= minimum ? "var(--success-bg)" : "var(--warning-bg)",
-                color: selectedEligibleCount >= minimum ? "var(--success-fg)" : "var(--warning-fg)",
+                background: cumpreMinimo ? "var(--success-bg)" : "var(--warning-bg)",
+                color: cumpreMinimo ? "var(--success-fg)" : "var(--warning-fg)",
               }}>
-                {selectedEligibleCount} / {minimum} selecionados
+                {form.extrasLivres
+                  ? `${obrigatoriosCount} obrigatório(s) + ${livresCount} à escolha`
+                  : `${selectedEligibleCount} / ${minimum} selecionados`}
               </span>
             </div>
+            <label className="flex cursor-pointer items-start gap-2 rounded-lg px-3 py-2 text-xs" style={{ border: "1px solid var(--border-strong)", color: "var(--text)" }}>
+              <input
+                type="checkbox"
+                className="mt-0.5 accent-[var(--blue)]"
+                checked={form.extrasLivres}
+                onChange={(event) => change("extrasLivres", event.target.checked)}
+              />
+              <span>
+                <span className="block font-medium">O cliente pode escolher qualquer serviço para completar o mínimo</span>
+                <span className="block" style={{ color: "var(--text-3)" }}>
+                  Contam os serviços de qualquer parceiro, exceto os da conta Tchilla (tratados por WhatsApp). A lista passa a ser opcional.
+                </span>
+              </span>
+            </label>
             <div className="relative">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-3)" }} />
               <input
@@ -515,15 +590,70 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
                     <span className="block truncate text-xs font-medium" style={{ color: "var(--text)" }}>{servico.nome}</span>
                     <span className="block truncate text-[11px]" style={{ color: "var(--text-3)" }}>{servico.descricao || "Sem descrição"}</span>
                   </span>
+                  {form.servicoIds.includes(servico.id) && (
+                    <button
+                      type="button"
+                      onClick={(event) => { event.preventDefault(); toggleObrigatorio(servico.id); }}
+                      aria-pressed={form.obrigatorios.includes(servico.id)}
+                      className="whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold cursor-pointer"
+                      style={form.obrigatorios.includes(servico.id)
+                        ? { background: "var(--blue)", color: "white" }
+                        : { background: "var(--gray-100)", color: "var(--text-2)", border: "1px solid var(--border)" }}
+                    >
+                      {form.obrigatorios.includes(servico.id) ? "Obrigatório" : "Sugestão"}
+                    </button>
+                  )}
                   <span className="whitespace-nowrap text-xs font-medium" style={{ color: "var(--text-2)" }}>{moeda(servico.preco)}</span>
                 </label>
               ))}
             </div>
-            {selectedEligibleCount < minimum && (
+            {obrigatoriosCount > minimum ? (
               <p className="text-xs" style={{ color: "var(--warning-fg)" }}>
-                Selecione mais {minimum - selectedEligibleCount} serviço(s) para cumprir o mínimo.
+                Há {obrigatoriosCount} obrigatórios para um mínimo de {minimum}. Aumente o mínimo ou tire um obrigatório.
               </p>
-            )}
+            ) : !form.extrasLivres && selectedEligibleCount < minimum ? (
+              <p className="text-xs" style={{ color: "var(--warning-fg)" }}>
+                Selecione mais {minimum - selectedEligibleCount} serviço(s), ou deixe o cliente escolher qualquer serviço.
+              </p>
+            ) : null}
+          </section>
+
+          <section className="space-y-2">
+            <div>
+              <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Prémio: convite digital</h3>
+              <p className="text-xs" style={{ color: "var(--text-3)" }}>
+                Quem reserva com esta promoção ganha um convite. Fica disponível depois de pagar a reserva, em &quot;Meus convites&quot;.
+              </p>
+            </div>
+            <div className={inputGrid}>
+              <label className="block text-xs" style={{ color: "var(--text-2)" }}>
+                <span className="mb-1 block font-medium" style={{ color: "var(--text)" }}>Escalão do convite</span>
+                <select
+                  value={form.premioEscalao}
+                  onChange={(event) => change("premioEscalao", event.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+                  style={{ border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text)" }}
+                >
+                  <option value="">Sem convite de prémio</option>
+                  {ESCALOES_CONVITE.map((e) => (
+                    <option key={e.id} value={e.id}>{e.label} · {moeda(e.preco)}</option>
+                  ))}
+                </select>
+              </label>
+              {form.premioEscalao && (
+                <GlobalInput
+                  id="promotion-invite-discount"
+                  label="Desconto no convite (%)"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value={form.premioPercentual}
+                  onChange={(event) => change("premioPercentual", event.target.value)}
+                  hint="100% = convite grátis."
+                />
+              )}
+            </div>
           </section>
 
           <GlobalInput
