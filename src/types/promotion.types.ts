@@ -18,6 +18,8 @@ export interface PromocaoServicoElegivel {
   tipoPreco?: string | null;
   subCategoria?: string | null;
   contratavel: boolean;
+  /** O cliente tem de levar este serviço; os outros da lista são sugestões. */
+  obrigatorio?: boolean;
 }
 
 export interface PromocaoResumo {
@@ -27,6 +29,12 @@ export interface PromocaoResumo {
   imagemUrl?: string | null;
   percentualDesconto: number;
   minServicosExtra: number;
+  /** Qualquer serviço de um parceiro conta para o mínimo, não só os da lista. */
+  extrasLivres?: boolean;
+  /** Convite digital oferecido a quem cumpre a promoção; percentual 100 = grátis. */
+  premioConviteEscalao?: string | null;
+  premioConvitePercentual?: number | null;
+  premioConviteRotulo?: string | null;
   ativa: boolean;
   inicioEm?: string | null;
   fimEm?: string | null;
@@ -49,6 +57,10 @@ export interface SalvarPromocao {
   inicioEm: string | null;
   fimEm: string | null;
   servicoIds: number[];
+  extrasLivres: boolean;
+  servicosObrigatorios: number[];
+  premioConviteEscalao: string | null;
+  premioConvitePercentual: number | null;
 }
 
 export interface PromocaoCatalogoItem {
