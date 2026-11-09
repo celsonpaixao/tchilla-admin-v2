@@ -20,6 +20,7 @@ export const ROUTES = {
     CATALOGO: "/gestao/catalogo",
     AVALIACOES: "/gestao/avaliacoes",
     CONVITES: "/gestao/convites",
+    PUBLICACOES: "/gestao/publicacoes",
   },
 
   USUARIOS: {

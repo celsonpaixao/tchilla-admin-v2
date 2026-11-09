@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 import { Bell, CheckCheck } from "lucide-react";
 import { updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -19,9 +21,11 @@ const TIPO_ICON: Record<string, string> = {
   reserva_cancelada: "❌",
   reserva_concluida: "🎊",
   reserva_pago: "💰",
+  Moderacao: "🛡️",
 };
 
 export function Topbar({ user, title }: TopbarProps) {
+  const router = useRouter();
   const {
     notifications,
     unreadCount,
@@ -182,7 +186,14 @@ export function Topbar({ user, title }: TopbarProps) {
                       {notifications.map((n) => (
                         <button
                           key={n.id}
-                          onClick={() => handleMarkAsRead(n.id, n.lida)}
+                          onClick={() => {
+                            handleMarkAsRead(n.id, n.lida);
+                            // Publicações ou contestações para moderar: leva direto à fila.
+                            if (n.tipo === "Moderacao") {
+                              setNotifOpen(false);
+                              router.push(ROUTES.GESTAO.PUBLICACOES);
+                            }
+                          }}
                           className={cn(
                             "w-full text-left px-4 py-3 border-b transition-colors cursor-pointer flex gap-3",
                             !n.lida && "border-l-2"
