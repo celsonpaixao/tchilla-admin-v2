@@ -6,7 +6,7 @@ import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
   CreditCard, Settings, LogOut, Loader2, Menu, X,
   Tag, Megaphone, BarChart3, Percent,
-  Receipt, Coins, Building2,
+  Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake, ScrollText, Images,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
@@ -33,6 +33,7 @@ function buildNav(unreadCount: number): NavGroup[] {
       links: [
         { label: "Relatório",  href: ROUTES.RESERVAS.RELATORIO, icon: <LayoutDashboard size={17} /> },
         { label: "Reservas",   href: ROUTES.RESERVAS.LISTAGEM,  icon: <CalendarCheck size={17} />, count: unreadCount || null },
+        { label: "Histórico",  href: ROUTES.RESERVAS.HISTORICO, icon: <History size={17} /> },
       ],
     },
     {
@@ -43,6 +44,10 @@ function buildNav(unreadCount: number): NavGroup[] {
         { label: "Campanhas",    href: ROUTES.GESTAO.CAMPANHAS,    icon: <Megaphone size={17} /> },
         { label: "Promoções",    href: ROUTES.GESTAO.PROMOCOES,    icon: <Percent size={17} /> },
         { label: "Espaços",      href: ROUTES.GESTAO.ESPACOS,      icon: <Building2 size={17} /> },
+        { label: "Catálogo",     href: ROUTES.GESTAO.CATALOGO,     icon: <Package size={17} /> },
+        { label: "Avaliações",   href: ROUTES.GESTAO.AVALIACOES,   icon: <Star size={17} /> },
+        { label: "Publicações",  href: ROUTES.GESTAO.PUBLICACOES,  icon: <Images size={17} /> },
+        { label: "Convites",     href: ROUTES.GESTAO.CONVITES,     icon: <MailOpen size={17} /> },
       ],
     },
     {
@@ -58,6 +63,7 @@ function buildNav(unreadCount: number): NavGroup[] {
       links: [
         { label: "Pagamentos", href: ROUTES.FINANCEIRO.PAGAMENTOS, icon: <CreditCard size={17} /> },
         { label: "Comissões",  href: ROUTES.FINANCEIRO.COMISSOES,  icon: <Coins size={17} /> },
+        { label: "Por parceiro", href: ROUTES.FINANCEIRO.POR_PARCEIRO, icon: <Handshake size={17} /> },
         { label: "Orçamentos", href: ROUTES.ANALISE.ORCAMENTOS,    icon: <Receipt size={17} /> },
       ],
     },
@@ -65,6 +71,7 @@ function buildNav(unreadCount: number): NavGroup[] {
       groupLabel: "Sistema",
       links: [
         { label: "Definições", href: ROUTES.CONFIGURACOES, icon: <Settings size={17} /> },
+        { label: "Auditoria",  href: ROUTES.AUDITORIA,     icon: <ScrollText size={17} /> },
       ],
     },
   ];

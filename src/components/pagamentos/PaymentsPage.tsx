@@ -23,6 +23,19 @@ import { TABS_PAGAMENTOS, type TabPagamentos } from "./filtros";
 import { CampoMotivo, ErroCarregamento, FilterTabs, ToolbarInput, ToolbarSelect } from "@/components/global/FiltrosUI";
 import { useFiltrosUrl } from "@/hooks/useFiltrosUrl";
 import { Kz, LinkDocumento, kzCompacto } from "./FinanceiroUI";
+import { PagamentoDetalheDrawer } from "./PagamentoDetalheDrawer";
+import { BotaoExportar } from "@/components/admin/AdminUI";
+
+/** Os filtros da lista no formato que a exportação CSV aceita. */
+function queryExportacao(f: FiltroPagamentos) {
+  const q = new URLSearchParams();
+  const pares: [string, unknown][] = [
+    ["estado", f.estado], ["metodo", f.metodo], ["origem", f.origem], ["porValidar", f.porValidar],
+    ["de", f.de], ["ate", f.ate], ["pesquisa", f.pesquisa],
+  ];
+  for (const [k, v] of pares) if (v !== undefined && v !== "") q.set(k, String(v));
+  return q.toString();
+}
 
 interface PaymentsPageProps {
   tab: TabPagamentos;
@@ -60,6 +73,7 @@ export function PaymentsPage({ tab, filtro, lista, resumo }: PaymentsPageProps) 
   const [rejeitarAlvo, setRejeitarAlvo] = useState<PagamentoInterface | null>(null);
   const [motivo, setMotivo] = useState("");
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [detalheAlvo, setDetalheAlvo] = useState<PagamentoInterface | null>(null);
   const [aGravar, startGravar] = useTransition();
 
   // Dados novos do servidor (filtro mudou ou refresh) substituem o estado local.
@@ -137,8 +151,15 @@ export function PaymentsPage({ tab, filtro, lista, resumo }: PaymentsPageProps) 
     {
       accessorKey: "id",
       header: "Nº",
-      cell: ({ getValue }) => (
-        <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--text-2)" }}>#{getValue() as number}</span>
+      cell: ({ row }) => (
+        <button
+          onClick={() => setDetalheAlvo(row.original)}
+          className="cursor-pointer hover:underline"
+          style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--blue-700)" }}
+          aria-label={`Ver o detalhe do pagamento #${row.original.id}`}
+        >
+          #{row.original.id}
+        </button>
       ),
     },
     {
@@ -242,6 +263,7 @@ export function PaymentsPage({ tab, filtro, lista, resumo }: PaymentsPageProps) 
     <PageShell
       title="Pagamentos"
       subtitle={pagina ? `${pagina.totalItems} ${pagina.totalItems === 1 ? "pagamento" : "pagamentos"} · ${periodo}` : periodo}
+      actions={<BotaoExportar recurso="pagamentos" query={queryExportacao(filtro)} />}
     >
       {/* KPIs do período */}
       {r ? (
@@ -325,6 +347,8 @@ export function PaymentsPage({ tab, filtro, lista, resumo }: PaymentsPageProps) 
           }
         />
       )}
+
+      <PagamentoDetalheDrawer pagamento={detalheAlvo} onClose={() => setDetalheAlvo(null)} />
 
       {/* Validar transferência */}
       <ConfirmModal

@@ -10,9 +10,15 @@ import { formatDate } from "@/lib/utils";
 import { useThemeStore } from "@/stores/themeStore";
 import type { ThemeStyle, ThemeDensity, ThemeDir } from "@/stores/themeStore";
 import { PageShell } from "@/components/global/PageShell";
+import type { ActionResult } from "@/types/common.types";
+import type { ConfiguracoesPlataforma } from "@/types/admin.types";
+import { TaxasPlataforma } from "./TaxasPlataforma";
 
 interface ConfiguracoesPageProps {
   user: UsuarioInterface | null;
+  configuracoes?: ActionResult<ConfiguracoesPlataforma>;
+  /** Papel da sessão: alterar as taxas exige Admin. */
+  papel?: string | null;
 }
 
 /* ── Segmented control (style idêntico ao twk-seg do DS) ─────── */
@@ -158,7 +164,7 @@ const S = {
 };
 
 /* ── Página ───────────────────────────────────────────────────── */
-export function ConfiguracoesPage({ user }: ConfiguracoesPageProps) {
+export function ConfiguracoesPage({ user, configuracoes, papel }: ConfiguracoesPageProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const {
@@ -253,6 +259,8 @@ export function ConfiguracoesPage({ user }: ConfiguracoesPageProps) {
               ))}
             </div>
           </div>
+
+          <TaxasPlataforma config={configuracoes?.success ? configuracoes.data : null} erro={configuracoes && !configuracoes.success ? configuracoes.error : undefined} podeAlterar={papel === "Admin"} />
 
           {/* Sair */}
           <button
