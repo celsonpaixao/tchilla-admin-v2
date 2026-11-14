@@ -12,6 +12,7 @@ import { PageShell } from "@/components/global/PageShell";
 import { GlobalButton } from "@/components/global/GlobalButton";
 import { ConfirmModal } from "@/components/global/GlobalModal";
 import { ToolbarInput } from "@/components/global/FiltrosUI";
+import { GlobalImageUrlUpload } from "@/components/global/GlobalImageUrlUpload";
 import { Cartao, Etiqueta, Migalhas } from "@/components/admin/AdminUI";
 import { Miniatura } from "@/components/publicacoes/PostUI";
 import { ROUTES } from "@/constants/routes";
@@ -203,9 +204,14 @@ export function ColecaoEditor({ colecao }: { colecao: ColecaoAdmin | null }) {
               <CampoForm rotulo="Data do evento (opcional)">
                 <ToolbarInput type="date" value={dataEvento} onChange={(e) => setDataEvento(e.target.value)} />
               </CampoForm>
-              <CampoForm rotulo="Capa (opcional)" ajuda="Endereço https. Sem capa, usa a primeira foto das publicações do dono ou dos anúncios.">
-                <ToolbarInput value={capaUrl} maxLength={500} onChange={(e) => setCapaUrl(e.target.value)} placeholder="https://storage.tchilla.com/…" />
-              </CampoForm>
+            </div>
+            {/* div e não label: dentro de um label, um clique na pré-visualização abria o seletor de ficheiros. */}
+            <div className="flex flex-col gap-1 text-xs font-medium" style={{ color: "var(--text-2)" }}>
+              <span>Capa (opcional)</span>
+              <GlobalImageUrlUpload value={capaUrl} onChange={setCapaUrl} pasta="colecoes" altura={140} />
+              <span className="font-normal" style={{ color: "var(--text-3)" }}>
+                Sem capa, usa a primeira foto das publicações do dono ou dos anúncios.
+              </span>
             </div>
             <EscolherDono dono={dono} onEscolher={setDono} />
           </div>
