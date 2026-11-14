@@ -18,6 +18,7 @@ import {
 import { GlobalUserAvatarName } from "@/components/global/GlobalAvatar";
 import { GlobalButton } from "@/components/global/GlobalButton";
 import { GlobalSelect } from "@/components/global/GlobalSelect";
+import { GlobalImageUrlUpload } from "@/components/global/GlobalImageUrlUpload";
 import { PageShell } from "@/components/global/PageShell";
 import { PromoSearchDialog } from "@/components/notificacoes/PromoSearchDialog";
 import type { PromoCatalogItem } from "@/actions/campanha.actions";
@@ -463,21 +464,11 @@ export function CampanhasPage({ clientes, agencias, cupons }: CampanhasPageProps
               <option value="Cupom">Cupom</option>
             </GlobalSelect>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)", display: "flex", gap: 6, alignItems: "center" }}>
-                URL da Imagem
+              <span style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--text)", display: "flex", gap: 6, alignItems: "center" }}>
+                Imagem
                 <span style={{ fontWeight: 400, color: "var(--text-3)", fontSize: 11.5 }}>opcional</span>
-              </label>
-              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                <ImageIcon size={13} style={{ position: "absolute", left: 11, color: "var(--text-3)", pointerEvents: "none" }} />
-                <input
-                  value={imagem}
-                  onChange={(e) => setImagem(e.target.value)}
-                  placeholder="https://…"
-                  style={{ ...inputStyle, paddingLeft: 30 }}
-                  onFocus={onFocusInput}
-                  onBlur={onBlurInput}
-                />
-              </div>
+              </span>
+              <GlobalImageUrlUpload value={imagem} onChange={setImagem} pasta="campanhas" altura={96} />
             </div>
           </div>
 

@@ -12,6 +12,7 @@ import {
 import { ConfirmModal, GlobalModal } from "@/components/global/GlobalModal";
 import { GlobalButton } from "@/components/global/GlobalButton";
 import { GlobalInput } from "@/components/global/GlobalInput";
+import { GlobalImageUrlUpload } from "@/components/global/GlobalImageUrlUpload";
 import { GlobalSelect } from "@/components/global/GlobalSelect";
 import { PageShell } from "@/components/global/PageShell";
 import type {
@@ -664,15 +665,13 @@ export function PromocoesPage({ initialPromocoes, catalogos, initialErrors }: Pr
             onChange={(event) => change("descricao", event.target.value)}
             placeholder="Detalhe as condições da promoção."
           />
-          <GlobalInput
-            id="promotion-image"
-            label="URL da imagem"
-            optional
-            type="url"
-            value={form.imagemUrl}
-            onChange={(event) => change("imagemUrl", event.target.value)}
-            placeholder="https://..."
-          />
+          <div className="flex flex-col gap-1.5">
+            <span className="flex items-center gap-1.5 text-[12.5px] font-semibold" style={{ color: "var(--text)" }}>
+              Imagem
+              <span className="text-[11.5px] font-normal" style={{ color: "var(--text-3)" }}>opcional</span>
+            </span>
+            <GlobalImageUrlUpload value={form.imagemUrl} onChange={(url) => change("imagemUrl", url)} pasta="promocoes" />
+          </div>
 
           <div className={inputGrid}>
             <GlobalInput
