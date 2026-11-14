@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // As imagens sobem por server action (storage.actions.ts); o limite por omissão é 1 MB.
+  experimental: {
+    serverActions: { bodySizeLimit: "10mb" },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "api.tchilla.com" },
