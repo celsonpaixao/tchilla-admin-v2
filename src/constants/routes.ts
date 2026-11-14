@@ -21,6 +21,8 @@ export const ROUTES = {
     AVALIACOES: "/gestao/avaliacoes",
     CONVITES: "/gestao/convites",
     PUBLICACOES: "/gestao/publicacoes",
+    COLECOES: "/gestao/colecoes",
+    COLECAO: (id: number | "nova") => `/gestao/colecoes/${id}`,
   },
 
   USUARIOS: {
