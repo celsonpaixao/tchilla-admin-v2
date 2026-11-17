@@ -6,7 +6,7 @@ import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
   CreditCard, Settings, LogOut, Loader2, Menu, X,
   Tag, Megaphone, BarChart3, Percent,
-  Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake, ScrollText, Images, LayoutGrid,
+  Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake, ScrollText, Images, LayoutGrid, Sparkles,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
@@ -66,6 +66,7 @@ function buildNav(unreadCount: number): NavGroup[] {
         { label: "Comissões",  href: ROUTES.FINANCEIRO.COMISSOES,  icon: <Coins size={17} /> },
         { label: "Por parceiro", href: ROUTES.FINANCEIRO.POR_PARCEIRO, icon: <Handshake size={17} /> },
         { label: "Orçamentos", href: ROUTES.ANALISE.ORCAMENTOS,    icon: <Receipt size={17} /> },
+        { label: "Camada social", href: ROUTES.ANALISE.SOCIAL, icon: <Sparkles size={17} /> },
       ],
     },
     {
