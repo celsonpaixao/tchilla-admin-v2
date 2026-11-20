@@ -36,6 +36,7 @@ export const ROUTES = {
     PAGAMENTOS: "/financeiro/pagamentos",
     COMISSOES: "/financeiro/comissoes",
     POR_PARCEIRO: "/financeiro/parceiros",
+    CODIGOS_REFERENCIA: "/financeiro/codigos-referencia",
   },
 
   ANALISE: {
