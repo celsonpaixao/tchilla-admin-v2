@@ -42,6 +42,7 @@ export const ROUTES = {
   ANALISE: {
     ORCAMENTOS: "/analise/orcamentos",
     SOCIAL: "/analise/social",
+    FUNIL: "/analise/funil",
   },
 
   CONFIGURACOES: "/configuracoes",

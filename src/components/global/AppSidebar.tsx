@@ -6,7 +6,7 @@ import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
   CreditCard, Settings, LogOut, Loader2, Menu, X,
   Tag, Megaphone, BarChart3, Percent,
-  Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake, Ticket, ScrollText, Images, LayoutGrid, Sparkles,
+  Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake, Ticket, ScrollText, Images, LayoutGrid, Sparkles, Filter,
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
@@ -68,6 +68,7 @@ function buildNav(unreadCount: number): NavGroup[] {
         { label: "Códigos de referência", href: ROUTES.FINANCEIRO.CODIGOS_REFERENCIA, icon: <Ticket size={17} /> },
         { label: "Orçamentos", href: ROUTES.ANALISE.ORCAMENTOS,    icon: <Receipt size={17} /> },
         { label: "Camada social", href: ROUTES.ANALISE.SOCIAL, icon: <Sparkles size={17} /> },
+        { label: "Funil de reservas", href: ROUTES.ANALISE.FUNIL, icon: <Filter size={17} /> },
       ],
     },
     {
