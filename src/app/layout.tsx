@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
+import { ServiceWorkerRegister } from "@/components/global/ServiceWorkerRegister";
 import "./globals.css";
 
 const siteName = "Tchilla Admin";
@@ -51,7 +52,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/admin_favicon.png",
-    apple: "/admin_favicon.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
+  // PWA no iOS (o manifest vem de src/app/manifest.ts)
+  appleWebApp: {
+    capable: true,
+    title: siteName,
+    statusBarStyle: "default",
   },
 };
 
@@ -80,6 +87,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <ServiceWorkerRegister />
         <Toaster
           position="top-right"
           richColors

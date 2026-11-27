@@ -12,9 +12,9 @@ interface DashboardProvidersProps {
   user: UsuarioInterface;
 }
 
-function NotificationListener({ userId }: { userId: number }) {
-  useSupervisorNotifications(userId);
-  usePushNotifications(userId);
+function NotificationListener({ user }: { user: UsuarioInterface }) {
+  useSupervisorNotifications(user.id);
+  usePushNotifications(user);
   return null;
 }
 
@@ -84,7 +84,7 @@ export function DashboardProviders({ children, user }: DashboardProvidersProps) 
   return (
     <>
       <ThemeApplier />
-      <NotificationListener userId={user.id} />
+      <NotificationListener user={user} />
       {children}
     </>
   );

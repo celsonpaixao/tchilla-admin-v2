@@ -1,168 +1,87 @@
 "use client";
 import { useEffect } from "react";
 import { getToken, onMessage } from "firebase/messaging";
-import {
-  collection, query, where, getDocs,
-  addDoc, updateDoc, doc, serverTimestamp,
-} from "firebase/firestore";
-import { db, getFirebaseMessaging } from "@/lib/firebase";
+import { getFirebaseMessaging } from "@/lib/firebase";
+import { registerServiceWorker } from "@/lib/pwa";
+import { registarTokenFcm } from "@/lib/fcm-tokens";
+import type { UsuarioInterface } from "@/types/user.types";
 
 const VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_KEY!;
 
-export function usePushNotifications(userId: number) {
+const log = (msg: string, data?: unknown) =>
+  console.log(`%c[FCM] ${msg}`, "color:#14AAE9;font-weight:600", data ?? "");
+
+/** A chave VAPID da subscrição atual é a que a app usa agora? */
+function usaChaveAtual(sub: PushSubscription): boolean {
+  const atual = sub.options.applicationServerKey;
+  if (!atual) return false;
+  const base64 = VAPID_KEY.replace(/-/g, "+").replace(/_/g, "/");
+  const esperada = Uint8Array.from(atob(base64 + "=".repeat((4 - (base64.length % 4)) % 4)), (c) =>
+    c.charCodeAt(0)
+  );
+  const bytes = new Uint8Array(atual);
+  return bytes.length === esperada.length && bytes.every((b, i) => b === esperada[i]);
+}
+
+type Utilizador = Pick<UsuarioInterface, "id" | "nome" | "tipo">;
+
+/**
+ * Obtém o token FCM deste browser e regista-o em `fcm_tokens` (ver lib/fcm-tokens.ts).
+ * Corre em cada abertura do painel: o FCM web não avisa quando o token muda, por isso é
+ * aqui que um token renovado substitui o anterior.
+ */
+export function usePushNotifications(user: Utilizador | null) {
+  const userId = user?.id;
+  const nome = user?.nome;
+  const role = user?.tipo;
+
   useEffect(() => {
     if (!userId) return;
+    let cancelado = false;
+    let pararForeground: (() => void) | undefined;
 
-    async function register() {
-      const log = (msg: string, data?: unknown) =>
-        console.log(`%c[FCM] ${msg}`, "color:#14AAE9;font-weight:600", data ?? "");
-
+    async function registar() {
       try {
-        log("🚀 Iniciando registo de token FCM...", { userId });
-
-        // 1. Verificar suporte
         const messaging = await getFirebaseMessaging();
-        if (!messaging) {
-          log("⚠️ Firebase Messaging não suportado neste browser");
-          return;
-        }
-        log("✅ Firebase Messaging suportado");
+        if (!messaging) return log("Firebase Messaging não suportado neste browser");
 
-        // 2. Verificar permissão
-        log(`🔔 Permissão de notificação: ${Notification.permission}`);
         if (Notification.permission !== "granted") {
-          log("⛔ Permissão não concedida — a sair");
-          return;
+          return log(`Permissão de notificação: ${Notification.permission} — sem registo`);
         }
 
-        // 3. Registar o Service Worker explicitamente (necessário no Next.js)
-        log("⚙️ A registar Service Worker...");
-        let swRegistration: ServiceWorkerRegistration;
-        try {
-          swRegistration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js",
-            { scope: "/" }
-          );
-          await navigator.serviceWorker.ready;
-          log("✅ Service Worker registado", swRegistration.scope);
-        } catch (swErr) {
-          log("❌ Falha ao registar Service Worker", swErr);
-          return;
+        if (!(await registerServiceWorker())) return log("Falha ao registar o Service Worker");
+        const swRegistration = await navigator.serviceWorker.ready;
+
+        // Só se cancela a subscrição se foi criada com outra chave VAPID; cancelar
+        // sempre obrigava o Firebase a emitir um token novo em cada abertura.
+        const sub = await swRegistration.pushManager.getSubscription();
+        if (sub && !usaChaveAtual(sub)) {
+          log("Subscrição com outra chave VAPID — a renovar");
+          await sub.unsubscribe();
         }
 
-        // 4. Cancelar subscrição push existente (pode ter VAPID key diferente)
-        const existingSub = await swRegistration.pushManager.getSubscription();
-        if (existingSub) {
-          log("🔄 Subscrição push existente encontrada — a cancelar para garantir chave correcta...");
-          await existingSub.unsubscribe();
-          log("✅ Subscrição cancelada");
-        } else {
-          log("ℹ️ Nenhuma subscrição push anterior");
-        }
-
-        // 5. Obter token FCM passando o SW registado
-        log("⏳ A obter token FCM do Firebase...");
         const token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
           serviceWorkerRegistration: swRegistration,
         });
-        if (!token) {
-          log("❌ Não foi possível obter o token FCM (VAPID key inválida?)");
-          return;
-        }
-        log("🔑 Token FCM obtido", `${token.substring(0, 30)}...`);
+        if (!token) return log("Não foi possível obter o token FCM (VAPID key inválida?)");
+        if (cancelado) return;
 
-        // 6. Verificar token activo no Firestore
-        log("🔍 A verificar se o token já existe e está activo no Firestore...");
-        const activeSnap = await getDocs(
-          query(
-            collection(db, "fcm_tokens"),
-            where("userId", "==", userId),
-            where("token", "==", token),
-            where("isActive", "==", true)
-          )
-        );
+        const docId = await registarTokenFcm({ userId: userId!, token, nome, role });
+        log("Token registado", { docId, token: `${token.substring(0, 20)}…` });
 
-        if (!activeSnap.empty) {
-          log("✅ Token já registado e activo — nenhuma acção necessária");
-          return;
-        }
-
-        // 7. Verificar token inactivo
-        log("🔍 Token não activo — a verificar se existe mas inactivo...");
-        const inactiveSnap = await getDocs(
-          query(
-            collection(db, "fcm_tokens"),
-            where("userId", "==", userId),
-            where("token", "==", token)
-          )
-        );
-
-        if (!inactiveSnap.empty) {
-          log("♻️ Token encontrado inactivo — a reactivar...");
-          inactiveSnap.forEach((d) => {
-            updateDoc(doc(db, "fcm_tokens", d.id), {
-              isActive: true,
-              invalidReason: null,
-              updatedAt: serverTimestamp(),
-            });
-          });
-          log("✅ Token reactivado com sucesso");
-          return;
-        }
-
-        // 8. Token novo — limpar antigos e criar
-        log("🆕 Token novo detectado — a verificar tokens web antigos...");
-        const oldWebSnap = await getDocs(
-          query(
-            collection(db, "fcm_tokens"),
-            where("userId", "==", userId),
-            where("deviceType", "==", "web"),
-            where("isActive", "==", true)
-          )
-        );
-
-        if (!oldWebSnap.empty) {
-          log(`🗑️ A desactivar ${oldWebSnap.size} token(s) web antigo(s)...`);
-          oldWebSnap.forEach((d) => {
-            updateDoc(doc(db, "fcm_tokens", d.id), {
-              isActive: false,
-              updatedAt: serverTimestamp(),
-            });
-          });
-        }
-
-        log("💾 A guardar novo token no Firestore...");
-        const docRef = await addDoc(collection(db, "fcm_tokens"), {
-          userId,
-          token,
-          isActive: true,
-          deviceType: "web",
-          deviceId: `web-${userId}`,
-          deviceName: navigator.userAgent.substring(0, 80),
-          deviceInfo: {
-            browser: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-          },
-          appVersion: "admin-web",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+        pararForeground = onMessage(messaging, (payload) => {
+          log("Push recebido em foreground", payload.notification?.title);
         });
-        log("✅ Token guardado com sucesso!", { docId: docRef.id });
-
-        // 9. Listener de foreground
-        onMessage(messaging, (payload) => {
-          log("📨 Push recebido em foreground", payload.notification?.title);
-        });
-
-        log("🎉 Registo FCM completo — pronto para receber push notifications");
-
       } catch (err) {
-        console.error("[FCM] ❌ Erro no registo:", err);
+        console.error("[FCM] Erro no registo:", err);
       }
     }
 
-    register();
-  }, [userId]);
+    registar();
+    return () => {
+      cancelado = true;
+      pararForeground?.();
+    };
+  }, [userId, nome, role]);
 }

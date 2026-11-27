@@ -13,6 +13,7 @@ import { ROUTES } from "@/constants/routes";
 import { toast } from "sonner";
 import type { UsuarioInterface } from "@/types/user.types";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { desativarTokenDoDispositivo } from "@/lib/fcm-tokens";
 
 /* ── Nav config ────────────────────────────────────────────── */
 interface NavLink {
@@ -327,6 +328,7 @@ export function AppSidebar({ user }: { user: UsuarioInterface | null }) {
   function handleLogout() {
     startTransition(async () => {
       try {
+        if (user) await desativarTokenDoDispositivo(user.id);
         await fetch("/api/auth/logout", { method: "POST" });
         toast.success("Até logo!");
         router.push(ROUTES.LOGIN);

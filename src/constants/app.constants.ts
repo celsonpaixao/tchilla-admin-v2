@@ -10,6 +10,19 @@ export const COOKIE_OPTIONS = {
 
 export const API_TIMEOUT = 100_000;
 
+/** Service worker único da app (PWA + push do Firebase) — ver public/sw.js. */
+export const SERVICE_WORKER_URL = "/sw.js";
+
+/** Registo de tokens de push — mesmo padrão do app-user e do app do parceiro. */
+export const FCM = {
+  COLLECTION: "fcm_tokens",
+  APP: "admin",
+  PLATAFORMA: "web",
+  ROLE_PADRAO: "Supervisor",
+  /** Chave do localStorage com o id estável deste browser. */
+  DEVICE_ID_KEY: "tchilla_admin_device_id",
+} as const;
+
 export const RESERVA_STATUS = {
   CONFIRMADO: 1,
   CANCELADO: 2,

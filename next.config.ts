@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Gravado em fcm_tokens.appVersion (o yarn define npm_package_version a partir do package.json).
+  env: {
+    NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version ?? "dev",
+  },
   // As imagens sobem por server action (storage.actions.ts); o limite por omissão é 1 MB.
   experimental: {
     serverActions: { bodySizeLimit: "10mb" },
@@ -33,6 +37,11 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
         ],
+      },
+      {
+        // O browser tem de ver sempre a versão mais recente do service worker.
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
       },
     ];
   },
