@@ -12,7 +12,7 @@
  * Mudou a lógica deste ficheiro? Suba VERSION para limpar as caches antigas.
  */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `tchilla-static-${VERSION}`;
 const RUNTIME_CACHE = `tchilla-runtime-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
@@ -26,20 +26,18 @@ const IS_DEV = ["localhost", "127.0.0.1"].includes(self.location.hostname);
 
 /* ─── Firebase Cloud Messaging ──────────────────────────────────────────── */
 
+// A configuração pública do Firebase vem no URL de registo (src/lib/pwa.ts → urlDoServiceWorker),
+// para o SW usar o mesmo projeto que a app em cada ambiente (hmg/stage vs. produção).
+const FIREBASE_CONFIG = Object.fromEntries(new URL(self.location.href).searchParams);
+const TEM_FIREBASE = ["apiKey", "projectId", "messagingSenderId", "appId"].every((k) => FIREBASE_CONFIG[k]);
+
 try {
+  if (!TEM_FIREBASE) throw new Error("sem configuração do Firebase no URL do service worker");
+
   importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js");
   importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js");
 
-  // Config hardcoded — SWs não têm acesso a process.env
-  firebase.initializeApp({
-    apiKey: "AIzaSyDheF9baAGJE8BBNKaCRoFs537nxLjvIsw",
-    authDomain: "tchilla-hmg.firebaseapp.com",
-    databaseURL: "https://tchilla-hmg-default-rtdb.firebaseio.com",
-    projectId: "tchilla-hmg",
-    storageBucket: "tchilla-hmg.firebasestorage.app",
-    messagingSenderId: "879571708226",
-    appId: "1:879571708226:web:6a4c958392e7a202dec0db",
-  });
+  firebase.initializeApp(FIREBASE_CONFIG);
 
   const messaging = firebase.messaging();
 

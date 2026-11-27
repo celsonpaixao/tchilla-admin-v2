@@ -3,7 +3,10 @@ export const COOKIE_NAME = "tchilla_token";
 export const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict" as const,
+  // "lax", não "strict": abrir a PWA pelo ícone do ecrã principal ou por uma notificação conta
+  // como navegação vinda de fora, e com "strict" o cookie não ia nesse 1.º pedido → login de novo.
+  // "lax" continua a bloqueá-lo em POSTs de outros sites (CSRF).
+  sameSite: "lax" as const,
   maxAge: 60 * 60 * 24 * 7, // 7 dias
   path: "/",
 };
