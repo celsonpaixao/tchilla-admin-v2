@@ -35,7 +35,9 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Os ficheiros da PWA (service workers, manifest, página offline) têm de ser
+  // públicos: o manifest é pedido sem cookies e o browser recusa SWs redirecionados.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sounds|assets|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sounds|assets|icons|sw\\.js$|firebase-messaging-sw\\.js$|manifest\\.webmanifest$|offline\\.html$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

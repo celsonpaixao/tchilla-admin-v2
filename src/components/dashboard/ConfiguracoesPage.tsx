@@ -7,6 +7,7 @@ import type { UsuarioInterface } from "@/types/user.types";
 import { GlobalAvatar } from "@/components/global/GlobalAvatar";
 import { ROUTES } from "@/constants/routes";
 import { formatDate } from "@/lib/utils";
+import { desativarTokenDoDispositivo } from "@/lib/fcm-tokens";
 import { useThemeStore } from "@/stores/themeStore";
 import type { ThemeStyle, ThemeDensity, ThemeDir } from "@/stores/themeStore";
 import { PageShell } from "@/components/global/PageShell";
@@ -176,6 +177,7 @@ export function ConfiguracoesPage({ user, configuracoes, papel }: ConfiguracoesP
 
   function handleLogout() {
     startTransition(async () => {
+      if (user) await desativarTokenDoDispositivo(user.id);
       await fetch("/api/auth/logout", { method: "POST" });
       toast.success("Até logo!");
       router.push(ROUTES.LOGIN);

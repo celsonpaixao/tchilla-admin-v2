@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-AO">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0E2A42" />
+  <meta name="robots" content="noindex" />
+  <title>Sem ligação — Tchilla Admin</title>
+  <!-- Página servida pelo service worker quando não há rede. É estática de
+       propósito (sem CSS do Next), por isso repete os tokens de globals.css. -->
+  <style>
+    :root {
+      --text-font: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --display: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --blue: #14AAE9;
+      --blue-hover: #0F97D0;
+      --navy: #0E2A42;
+      --bg: #F6F5F3;
+      --surface: #FFFFFF;
+      --border: #E2DFDA;
+      --heading: #0E2A42;
+      --text-3: #827D75;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0A2030;
+        --surface: #122B40;
+        --border: #1C3A52;
+        --heading: #FFFFFF;
+        --text-3: #ABA69E;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+      font-family: var(--text-font);
+      -webkit-font-smoothing: antialiased;
+    }
+    .card {
+      width: 100%;
+      max-width: 400px;
+      padding: 32px;
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(14, 42, 66, 0.08);
+    }
+    img { width: 56px; height: 56px; border-radius: 14px; }
+    h1 {
+      margin: 20px 0 8px;
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--heading);
+    }
+    p { margin: 0 0 24px; font-size: 14px; line-height: 1.5; color: var(--text-3); }
+    button {
+      padding: 10px 18px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--blue);
+      color: var(--navy);
+      font: 600 14px var(--text-font);
+      cursor: pointer;
+    }
+    button:hover { background: var(--blue-hover); }
+    button:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img src="/icons/icon-192.png" alt="" />
+    <h1>Sem ligação à internet</h1>
+    <p>Verifique a sua ligação. O painel volta a abrir sozinho assim que a rede regressar.</p>
+    <button type="button" onclick="location.reload()">Tentar novamente</button>
+  </main>
+  <script>
+    window.addEventListener("online", () => location.reload());
+  </script>
+</body>
+</html>
