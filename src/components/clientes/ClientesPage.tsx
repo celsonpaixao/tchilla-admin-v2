@@ -81,7 +81,7 @@ export function ClientesPage({ tab, filtro, lista, resumo }: ClientesPageProps) 
       subtitle={pagina ? `${pagina.totalItems} ${pagina.totalItems === 1 ? "conta" : "contas"}` : undefined}
     >
       {r ? (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
           <KPICard label="Clientes ativos" value={clientes} icon={<Users size={16} />} />
           <KPICard label="Registos este mês" value={r.novos} icon={<UserPlus size={16} />} />
           <KPICard label="Contas verificadas (todos os tipos)" value={r.verificados} suffix={`de ${r.total}`} icon={<BadgeCheck size={16} />} />

@@ -46,7 +46,7 @@ export function PublicacoesPage({ vista, filtro, estadoContestacao, contadores, 
       subtitle="Fotos e vídeos de parceiros e clientes, ligados aos anúncios. As de clientes só aparecem na app depois de aprovadas aqui (prazo: 24 horas)."
     >
       {c ? (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
           <KPICard label="Para rever" value={c.emRevisao} icon={<Inbox size={16} />} />
           <KPICard label="Fora do prazo (24h)" value={c.prazoEsgotado} icon={<Clock size={16} />} />
           <KPICard label="Contestações abertas" value={c.contestacoesAbertas} icon={<Flag size={16} />} />

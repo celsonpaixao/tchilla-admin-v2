@@ -267,7 +267,7 @@ export function PaymentsPage({ tab, filtro, lista, resumo }: PaymentsPageProps) 
     >
       {/* KPIs do período */}
       {r ? (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
           <KPICard label={`Recebido · ${r.recebido.quantidade}`} value={recebido!.valor} suffix={recebido!.sufixo} icon={<Wallet size={16} />} />
           <KPICard label="Transferências por validar" value={r.porValidar.quantidade} suffix={r.porValidar.quantidade ? formatCurrencyAOA(r.porValidar.valor) : undefined} icon={<Hourglass size={16} />} />
           <KPICard label={`Pendente · ${r.pendente.quantidade}`} value={pendente!.valor} suffix={pendente!.sufixo} icon={<Clock size={16} />} />
@@ -314,7 +314,7 @@ export function PaymentsPage({ tab, filtro, lista, resumo }: PaymentsPageProps) 
           }}
           toolbar={
             <div className="flex flex-wrap items-center gap-2 w-full">
-              <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[200px] sm:max-w-xs">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-3)" }} />
                 <ToolbarInput
                   type="search"

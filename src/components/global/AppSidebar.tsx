@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useTransition } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard, CalendarCheck, Users, UserCheck,
-  CreditCard, Settings, LogOut, Loader2, Menu, X,
+  CreditCard, Settings, LogOut, Loader2, X,
   Tag, Megaphone, BarChart3, Percent,
   Receipt, Coins, Building2, History, Package, Star, MailOpen, Handshake, Ticket, ScrollText, Images, LayoutGrid, Sparkles, Filter,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import { ROUTES } from "@/constants/routes";
 import { toast } from "sonner";
 import type { UsuarioInterface } from "@/types/user.types";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { useUiStore } from "@/stores/uiStore";
 import { desativarTokenDoDispositivo } from "@/lib/fcm-tokens";
 
 /* ── Nav config ────────────────────────────────────────────── */
@@ -89,14 +91,17 @@ interface SidebarContentProps {
   onLogout: () => void;
   isPending: boolean;
   unreadCount: number;
+  /** Só no menu mobile/tablet: fecha o painel (e ativa o layout tátil). */
+  onClose?: () => void;
 }
 
-function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: SidebarContentProps) {
+function SidebarContent({ user, pathname, onLogout, isPending, unreadCount, onClose }: SidebarContentProps) {
   const navGroups = buildNav(unreadCount);
+  const mobile = !!onClose;
 
   return (
     <div style={{
-      position: "sticky", top: 0, height: "100vh",
+      position: "sticky", top: 0, height: mobile ? "100%" : "100vh",
       background: "var(--navy)", color: "#cfe0ee",
       display: "flex", flexDirection: "column",
       padding: 0, overflow: "hidden",
@@ -105,7 +110,7 @@ function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: Si
       {/* ── .side-brand ─────────────────────────────────────── */}
       <div style={{
         display: "flex", alignItems: "center", gap: 11,
-        padding: "18px 18px 16px",
+        padding: mobile ? "calc(14px + var(--safe-top)) 12px 14px 18px" : "18px 18px 16px",
         borderBottom: "1px solid rgba(255,255,255,.08)",
         flexShrink: 0,
       }}>
@@ -138,6 +143,17 @@ function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: Si
             Admin
           </small>
         </div>
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Fechar menu"
+            className="ml-auto flex items-center justify-center rounded-lg cursor-pointer"
+            style={{ width: 40, height: 40, color: "#bcd0e2", background: "rgba(255,255,255,.06)", border: "none" }}
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* ── .side-scroll ────────────────────────────────────── */}
@@ -171,12 +187,15 @@ function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: Si
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={onClose}
                   style={{
                     display: "flex", alignItems: "center", gap: 10,
-                    padding: "7px 12px",
+                    // no menu tátil cada item tem ≥ 40px de altura
+                    padding: mobile ? "11px 12px" : "7px 12px",
+                    fontSize: mobile ? 14 : 13,
                     borderRadius: "var(--r-sm)",
                     color: isActive ? "#fff" : "#bcd0e2",
-                    fontSize: 13, fontWeight: 500,
+                    fontWeight: 500,
                     cursor: "pointer",
                     position: "relative",
                     transition: "background .12s, color .12s",
@@ -259,7 +278,7 @@ function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: Si
 
       {/* ── Rodapé — usuário ────────────────────────────────── */}
       <div style={{
-        padding: "10px 10px 12px",
+        padding: mobile ? "10px 10px calc(12px + var(--safe-bottom))" : "10px 10px 12px",
         borderTop: "1px solid rgba(255,255,255,.08)",
         flexShrink: 0,
       }}>
@@ -302,14 +321,15 @@ function SidebarContent({ user, pathname, onLogout, isPending, unreadCount }: Si
             title="Sair" aria-label="Sair"
             style={{
               cursor: "pointer", background: "transparent", border: "none",
-              color: "rgba(255,255,255,.35)", padding: 4,
+              color: mobile ? "rgba(255,255,255,.6)" : "rgba(255,255,255,.35)",
+              padding: mobile ? 0 : 4, width: mobile ? 40 : undefined, height: mobile ? 40 : undefined,
               borderRadius: "var(--r-xs)", display: "grid", placeItems: "center",
               transition: "color .12s", flexShrink: 0,
             }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#fff")}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,.35)")}
           >
-            {isPending ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
+            {isPending ? <Loader2 size={mobile ? 18 : 14} className="animate-spin" /> : <LogOut size={mobile ? 18 : 14} />}
           </button>
         </div>
       </div>
@@ -322,8 +342,25 @@ export function AppSidebar({ user }: { user: UsuarioInterface | null }) {
   const pathname    = usePathname();
   const router      = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [mobileOpen, setMobileOpen]  = useState(false);
+  const mobileOpen  = useUiStore((s) => s.menuAberto);
+  const fecharMenu  = useUiStore((s) => s.fecharMenu);
   const unreadCount = useNotificationStore((s) => s.unreadCount);
+
+  // Fecha ao navegar (inclui o botão "voltar" do Android)
+  useEffect(() => { fecharMenu(); }, [pathname, fecharMenu]);
+
+  // Escape fecha; a página por trás não rola enquanto o menu está aberto
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") fecharMenu(); };
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = overflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen, fecharMenu]);
 
   function handleLogout() {
     startTransition(async () => {
@@ -351,37 +388,39 @@ export function AppSidebar({ user }: { user: UsuarioInterface | null }) {
         <SidebarContent {...props} />
       </aside>
 
-      {/* Mobile toggle — display gerido pelo Tailwind (lg:hidden), sem display inline */}
-      <button
-        className="lg:hidden fixed flex items-center justify-center"
-        style={{
-          top: 14, left: 14, zIndex: 50,
-          padding: 8, borderRadius: "var(--r-md)",
-          background: "var(--navy)", color: "white",
-          border: "none", cursor: "pointer",
-        }}
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label="Menu"
-      >
-        {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-      </button>
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <>
-          <div
-            className="lg:hidden"
-            style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,.5)" }}
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="lg:hidden" style={{
-            position: "fixed", left: 0, top: 0, bottom: 0,
-            width: "var(--sidebar-width)", zIndex: 50,
-          }}>
-            <SidebarContent {...props} />
-          </aside>
-        </>
-      )}
+      {/* Telemóvel/tablet — menu lateral aberto pela Topbar ou pela barra inferior */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              key="menu-overlay"
+              className="lg:hidden"
+              style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(14,42,66,.45)" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.2 } }}
+              exit={{ opacity: 0, transition: { duration: 0.16 } }}
+              onClick={fecharMenu}
+            />
+            <motion.aside
+              key="menu-painel"
+              className="lg:hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menu de navegação"
+              style={{
+                position: "fixed", left: 0, top: 0, bottom: 0, zIndex: 61,
+                width: "min(300px, 86vw)",
+                boxShadow: "8px 0 32px rgba(14,42,66,.25)",
+              }}
+              initial={{ x: "-100%" }}
+              animate={{ x: 0, transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] } }}
+              exit={{ x: "-100%", transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } }}
+            >
+              <SidebarContent {...props} onClose={fecharMenu} />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }

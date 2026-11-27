@@ -70,7 +70,7 @@ export function GlobalDrawer({
                 >
                   {/* Header */}
                   <div
-                    className="flex items-center justify-between gap-4 px-5 py-4 border-b flex-shrink-0"
+                    className="flex items-center justify-between gap-4 px-5 pb-4 pt-[calc(1rem+var(--safe-top))] border-b flex-shrink-0"
                     style={{ borderColor: "var(--border)" }}
                   >
                     <div className="space-y-0.5 min-w-0">
@@ -94,26 +94,26 @@ export function GlobalDrawer({
                     </div>
                     <Dialog.Close asChild>
                       <button
-                        className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer transition-colors"
+                        className="flex-shrink-0 w-9 h-9 -mr-1.5 flex items-center justify-center rounded-lg cursor-pointer transition-colors"
                         style={{ color: "var(--text-3)" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = "var(--gray-100)")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                         aria-label="Fechar"
                       >
-                        <X size={16} />
+                        <X size={18} />
                       </button>
                     </Dialog.Close>
                   </div>
 
                   {/* Body */}
-                  <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 custom-scrollbar">
                     {children}
                   </div>
 
                   {/* Footer */}
                   {footer && (
                     <div
-                      className="flex items-center justify-end gap-2 px-5 py-4 border-t flex-shrink-0"
+                      className="flex items-center justify-end gap-2 px-5 pt-4 pb-[calc(1rem+var(--safe-bottom))] border-t flex-shrink-0 [&>*]:flex-1 sm:[&>*]:flex-none [&>button]:min-h-11 sm:[&>button]:min-h-0"
                       style={{ borderColor: "var(--border)" }}
                     >
                       {footer}

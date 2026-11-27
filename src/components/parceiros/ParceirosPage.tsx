@@ -187,7 +187,7 @@ export function ParceirosPage({ tab, filtro, lista, resumo }: ParceirosPageProps
             onPageChange: (p) => atualizar({ pagina: p > 1 ? p : undefined }),
           }}
           toolbar={
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[200px] sm:max-w-sm">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-3)" }} />
               <ToolbarInput
                 type="search"

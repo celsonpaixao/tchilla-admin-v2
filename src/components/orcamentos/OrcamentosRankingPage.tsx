@@ -179,7 +179,7 @@ export function OrcamentosRankingPage() {
         </GlobalSelect>
       }
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPICard label="Total de solicitações" value={requests.length} icon={<FileText size={16} />} />
         <KPICard label="Proposta mais pedida" value={rankingPropostas[0]?.label ?? "—"} icon={<Sparkles size={16} />} />
         <KPICard label="Tipo de evento em alta" value={rankingTipoEvento[0]?.label ?? "—"} icon={<TrendingUp size={16} />} accent />

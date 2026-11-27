@@ -143,7 +143,7 @@ export function ComissoesPage({ tab, lista, resumo, porConfirmar }: ComissoesPag
       subtitle="Comissões das reservas pagas por transferência — o parceiro paga à Tchilla e a equipa confirma."
     >
       {r ? (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-3">
           <KPICard label={`Por receber · ${r.comissoesPendentes.quantidade}`} value={pendentes!.valor} suffix={pendentes!.sufixo} icon={<Clock size={16} />} />
           <KPICard label={`Recebidas · ${r.comissoesPagas.quantidade}`} value={pagas!.valor} suffix={pagas!.sufixo} icon={<Wallet size={16} />} />
           <KPICard label="Por confirmar" value={porConfirmar} icon={<FileText size={16} />} />

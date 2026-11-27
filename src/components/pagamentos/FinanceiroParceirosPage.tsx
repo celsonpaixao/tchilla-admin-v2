@@ -63,7 +63,7 @@ export function FinanceiroParceirosPage({ periodo, lista }: { periodo: { de?: st
       subtitle="Uma reserva com vários parceiros conta para cada um. O split só existe quando a reserva tem um único parceiro com IBAN e NIF."
     >
       {lista.success && (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
           <KPICard label={`Reservas pagas · ${dados.length} ${dados.length === 1 ? "parceiro" : "parceiros"}`} value={faturado.valor} suffix={faturado.sufixo} icon={<Handshake size={16} />} />
           <KPICard label="Recebido pelos parceiros no split" value={split.valor} suffix={split.sufixo} icon={<Wallet size={16} />} />
           <KPICard label="Comissão Tchilla no split" value={comissaoSplit.valor} suffix={comissaoSplit.sufixo} icon={<Coins size={16} />} />

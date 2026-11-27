@@ -140,7 +140,7 @@ export function ReservasListaPage({ tab, filtro, lista, resumo, historico }: Res
       actions={<BotaoExportar recurso="reservas" query={queryExportacao({ ...filtro, pageNumber: undefined, pageSize: undefined })} />}
     >
       {r ? (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
           <KPICard label={`Reservas · ${r.total.quantidade}`} value={kzCompacto(r.total.valor).valor} suffix={kzCompacto(r.total.valor).sufixo} icon={<CalendarDays size={16} />} />
           <KPICard label={`Por pagar · ${r.porPagar.quantidade}`} value={porPagar!.valor} suffix={porPagar!.sufixo} icon={<Clock size={16} />} />
           <KPICard label={`Pagas · ${r.pagas.quantidade}`} value={pagas!.valor} suffix={pagas!.sufixo} icon={<Wallet size={16} />} />

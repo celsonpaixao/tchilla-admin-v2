@@ -1,5 +1,6 @@
 "use client";
 import { AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /* ── Abas segmentadas (filtro por estado) ───────────────────── */
 
@@ -58,8 +59,17 @@ const CONTROLO: React.CSSProperties = {
   outline: "none",
 };
 
+/** Telemóvel: dois por linha, a ocupar a largura; sm+: largura natural. */
+const SELECT_RESPONSIVO = "flex-1 basis-[calc(50%-4px)] min-w-0 sm:flex-none sm:basis-auto";
+
 export function ToolbarSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} style={{ ...CONTROLO, paddingRight: 28, cursor: "pointer", ...props.style }} />;
+  return (
+    <select
+      {...props}
+      className={cn(SELECT_RESPONSIVO, props.className)}
+      style={{ ...CONTROLO, paddingRight: 28, cursor: "pointer", ...props.style }}
+    />
+  );
 }
 
 export function ToolbarInput(props: React.InputHTMLAttributes<HTMLInputElement>) {

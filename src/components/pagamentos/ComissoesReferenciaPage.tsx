@@ -291,7 +291,7 @@ export function ComissoesReferenciaPage({ papel, codigos, codigoId, mes, comisso
       }
     >
       {r && (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-3">
           <KPICard label="Por pagar neste mês" value={kpiPorPagar!.valor} suffix={kpiPorPagar!.sufixo} icon={<Clock size={16} />} />
           <KPICard label="Pago neste mês" value={kpiPago!.valor} suffix={kpiPago!.sufixo} icon={<Wallet size={16} />} />
           <KPICard

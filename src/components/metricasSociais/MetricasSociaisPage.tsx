@@ -61,7 +61,7 @@ function Conteudo({ m }: { m: MetricasSociais }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPICard
           label={`Parceiros ativos com posts (${num(parceiros.comPost)} de ${num(parceiros.ativos)})`}
           value={pct(parceiros.percentagem)}

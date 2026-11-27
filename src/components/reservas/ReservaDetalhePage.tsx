@@ -229,10 +229,11 @@ export function ReservaDetalhePage({ reserva, voltar, papel }: ReservaDetalhePag
                 <GlobalButton size="sm" variant="secondary" onClick={() => setReembolsar(true)}>Registar reembolso</GlobalButton>
               )}
             >
-              <dl className="grid grid-cols-3 gap-3 text-sm">
-                <div className="text-right"><dt className="text-xs" style={{ color: "var(--text-3)" }}>Pago</dt><dd><Kz valor={r.reembolso.pago} /></dd></div>
-                <div className="text-right"><dt className="text-xs" style={{ color: "var(--text-3)" }}>Reembolsado</dt><dd><Kz valor={r.reembolso.reembolsado} /></dd></div>
-                <div className="text-right"><dt className="text-xs" style={{ color: "var(--text-3)" }}>Por reembolsar</dt><dd><Kz valor={r.reembolso.porReembolsar} forte /></dd></div>
+              {/* Telemóvel: lista rótulo → valor; sm+: três colunas */}
+              <dl className="grid gap-2 sm:grid-cols-3 sm:gap-3 text-sm">
+                <div className="flex items-baseline justify-between gap-3 sm:block sm:text-right"><dt className="text-xs" style={{ color: "var(--text-3)" }}>Pago</dt><dd><Kz valor={r.reembolso.pago} /></dd></div>
+                <div className="flex items-baseline justify-between gap-3 sm:block sm:text-right"><dt className="text-xs" style={{ color: "var(--text-3)" }}>Reembolsado</dt><dd><Kz valor={r.reembolso.reembolsado} /></dd></div>
+                <div className="flex items-baseline justify-between gap-3 sm:block sm:text-right"><dt className="text-xs" style={{ color: "var(--text-3)" }}>Por reembolsar</dt><dd><Kz valor={r.reembolso.porReembolsar} forte /></dd></div>
               </dl>
               {r.estado === "Cancelado" && r.reembolso.porReembolsar > 0 && (
                 <p className="text-xs" style={{ color: "var(--warning-fg)" }}>

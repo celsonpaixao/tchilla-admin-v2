@@ -28,7 +28,7 @@ export function CampoPesquisa({
   valor, onChange, placeholder, rotulo,
 }: { valor: string; onChange: (v: string) => void; placeholder: string; rotulo: string }) {
   return (
-    <div className="relative flex-1 min-w-[200px] max-w-xs">
+    <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[200px] sm:max-w-xs">
       <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-3)" }} />
       <ToolbarInput
         type="search"
@@ -42,20 +42,26 @@ export function CampoPesquisa({
   );
 }
 
+const PERIODO_LABEL =
+  "flex flex-col items-stretch gap-1 flex-1 min-w-0 text-xs " +
+  "sm:flex-row sm:items-center sm:gap-1.5 sm:flex-none";
+
 export function CamposPeriodo({
   de, ate, onChange, rotulo = "",
 }: { de?: string; ate?: string; onChange: (m: { de?: string; ate?: string }) => void; rotulo?: string }) {
   return (
-    <>
-      <label className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-3)" }}>
+    // Telemóvel: linha própria com os dois campos lado a lado (rótulo por cima).
+    // sm+: o wrapper "desaparece" (display: contents) e tudo fica na linha da toolbar.
+    <div className="flex w-full gap-2 sm:contents">
+      <label className={PERIODO_LABEL} style={{ color: "var(--text-3)" }}>
         {rotulo ? `${rotulo} de` : "De"}
-        <ToolbarInput type="date" value={de ?? ""} max={ate} onChange={(e) => onChange({ de: e.target.value || undefined })} />
+        <ToolbarInput type="date" className="w-full sm:w-auto min-w-0" value={de ?? ""} max={ate} onChange={(e) => onChange({ de: e.target.value || undefined })} />
       </label>
-      <label className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-3)" }}>
+      <label className={PERIODO_LABEL} style={{ color: "var(--text-3)" }}>
         Até
-        <ToolbarInput type="date" value={ate ?? ""} min={de} onChange={(e) => onChange({ ate: e.target.value || undefined })} />
+        <ToolbarInput type="date" className="w-full sm:w-auto min-w-0" value={ate ?? ""} min={de} onChange={(e) => onChange({ ate: e.target.value || undefined })} />
       </label>
-    </>
+    </div>
   );
 }
 

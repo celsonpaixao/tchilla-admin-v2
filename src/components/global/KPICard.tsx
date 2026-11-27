@@ -71,13 +71,12 @@ export function KPICard({
 
   return (
     <div
-      className={cn("relative overflow-hidden", className)}
+      className={cn("kpi-card relative overflow-hidden min-w-0", className)}
       style={{
         background:    "var(--surface)",
         border:        "1px solid var(--border)",
         borderTop:     `3px solid ${accent ? "var(--accent)" : "var(--blue)"}`,
         borderRadius:  "var(--r-lg)",
-        padding:       "16px 17px",
         boxShadow:     "var(--shadow-xs)",
       }}
     >
@@ -104,15 +103,14 @@ export function KPICard({
         </span>
       </div>
 
-      {/* .v.num — Sora 27px, navy, letter-spacing -0.02em, tabular-nums */}
+      {/* .v.num — Sora 27px (21px no telemóvel, ver .kpi-valor), navy, tabular-nums */}
       <div
+        className="kpi-valor"
         style={{
           fontFamily:        "var(--display)",
           fontWeight:        700,
-          fontSize:          27,
           letterSpacing:     "-0.02em",
           color:             "var(--heading)",
-          marginTop:         11,
           fontVariantNumeric:"tabular-nums",
           fontFeatureSettings:"\"tnum\"",
           lineHeight:        1.1,
@@ -120,7 +118,7 @@ export function KPICard({
       >
         {value}
         {suffix && (
-          <small style={{ fontSize: 14, color: "var(--text-3)", fontWeight: 600, marginLeft: 4 }}>
+          <small style={{ color: "var(--text-3)", fontWeight: 600, marginLeft: 4 }}>
             {suffix}
           </small>
         )}
