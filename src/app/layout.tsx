@@ -64,6 +64,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#0E2A42",
+  // Ocupa o ecrã todo no iPhone (notch/home indicator); as margens vêm de env(safe-area-inset-*)
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

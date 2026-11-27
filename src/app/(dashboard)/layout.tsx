@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { AppSidebar } from "@/components/global/AppSidebar";
 import { Topbar } from "@/components/global/Topbar";
+import { MobileTabBar } from "@/components/global/MobileTabBar";
 import { ROUTES } from "@/constants/routes";
 import { DashboardProviders } from "./providers";
 
@@ -39,6 +40,9 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* Telemóvel/tablet: navegação inferior (no desktop é a sidebar) */}
+      <MobileTabBar />
     </DashboardProviders>
   );
 }

@@ -160,8 +160,9 @@ export function CuponsPage({ initialCupons }: CuponsPageProps) {
         ))}
       </div>
 
-      {/* ── Tabela ── */}
-      <div className="card overflow-hidden">
+      {/* ── Tabela ── (colunas fixas: no telemóvel rola na horizontal dentro do cartão) */}
+      <div className="card overflow-x-auto">
+        <div style={{ minWidth: 640 }}>
         {/* Cabeçalho da tabela */}
         <div
           className="grid gap-3 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide"
@@ -263,7 +264,7 @@ export function CuponsPage({ initialCupons }: CuponsPageProps) {
                 <div className="flex items-center justify-end gap-1">
                   <button
                     onClick={() => openEdit(c)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer"
                     style={{ color: "var(--text-3)" }}
                     aria-label="Editar"
                   >
@@ -271,7 +272,7 @@ export function CuponsPage({ initialCupons }: CuponsPageProps) {
                   </button>
                   <button
                     onClick={() => setDeleteTarget(c)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer"
                     style={{ color: "var(--danger-fg)" }}
                     aria-label="Remover"
                   >
@@ -282,6 +283,7 @@ export function CuponsPage({ initialCupons }: CuponsPageProps) {
             );
           })
         )}
+        </div>
       </div>
 
       {/* ── Modal Criar / Editar ── */}

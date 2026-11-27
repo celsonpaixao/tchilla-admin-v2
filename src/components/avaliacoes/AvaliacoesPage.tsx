@@ -138,7 +138,7 @@ export function AvaliacoesPage({ faixa, visibilidade, filtro, lista, resumo }: A
   return (
     <PageShell title="Avaliações" subtitle="O que os clientes dizem dos anúncios. Uma avaliação oculta sai da app e das médias; o cliente não é avisado.">
       {r ? (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
           <KPICard label={`Média · ${r.total} avaliações`} value={r.total ? r.media.toLocaleString("pt-AO", { maximumFractionDigits: 2 }) : "—"} suffix={r.total ? "/ 5" : undefined} icon={<Star size={16} />} />
           <KPICard label="Negativas (1 e 2)" value={r.negativas} icon={<ThumbsDown size={16} />} />
           <KPICard label="Ocultas pela equipa" value={r.ocultas} icon={<EyeOff size={16} />} />

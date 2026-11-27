@@ -53,79 +53,84 @@ export function GlobalModal({
                 />
               </Dialog.Overlay>
 
-              {/* ── Content ── */}
-              <Dialog.Content asChild forceMount>
-                <motion.div
-                  key="modal-content"
-                  className={cn(
-                    "fixed left-1/2 top-1/2 z-50",
-                    "w-[calc(100%-2rem)] rounded-xl focus:outline-none",
-                    SIZE_CLASSES[size]
-                  )}
-                  style={{
-                    background:  "var(--surface)",
-                    boxShadow:   "var(--shadow-lg)",
-                    translateX:  "-50%",
-                    translateY:  "-50%",
-                  }}
-                  initial={{ opacity: 0, scale: 0.96, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0, transition: SPRING }}
-                  exit={{ opacity: 0, scale: 0.97, y: 6, transition: LEAVE }}
-                  aria-describedby={description ? "modal-description" : undefined}
-                >
-                  {/* Header */}
-                  {(title || description) && (
-                    <div
-                      className="flex items-start justify-between gap-4 px-5 pt-5 pb-4 border-b"
-                      style={{ borderColor: "var(--border)" }}
-                    >
-                      <div className="space-y-0.5 min-w-0">
-                        {title && (
-                          <Dialog.Title
-                            className="text-base font-semibold"
-                            style={{ color: "var(--text)" }}
-                          >
-                            {title}
-                          </Dialog.Title>
-                        )}
-                        {description && (
-                          <Dialog.Description
-                            id="modal-description"
-                            className="text-sm"
+              {/* ── Content ──
+                  Telemóvel: bottom sheet (encostado em baixo, altura limitada, corpo com scroll).
+                  sm+: centrado como antes. */}
+              <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+                <Dialog.Content asChild forceMount>
+                  <motion.div
+                    key="modal-content"
+                    className={cn(
+                      "pointer-events-auto flex flex-col w-full focus:outline-none",
+                      "rounded-t-2xl sm:rounded-xl",
+                      "max-h-[92dvh] sm:max-h-[calc(100dvh-2rem)]",
+                      SIZE_CLASSES[size]
+                    )}
+                    style={{ background: "var(--surface)", boxShadow: "var(--shadow-lg)" }}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0, transition: SPRING }}
+                    exit={{ opacity: 0, y: 16, transition: LEAVE }}
+                    aria-describedby={description ? "modal-description" : undefined}
+                  >
+                    {/* Pega da bottom sheet (só telemóvel) */}
+                    <div aria-hidden className="sm:hidden flex justify-center pt-2 -mb-2 flex-shrink-0">
+                      <span style={{ width: 36, height: 4, borderRadius: 99, background: "var(--gray-300)" }} />
+                    </div>
+
+                    {/* Header */}
+                    {(title || description) && (
+                      <div
+                        className="flex items-start justify-between gap-4 px-5 pt-5 pb-4 border-b flex-shrink-0"
+                        style={{ borderColor: "var(--border)" }}
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          {title && (
+                            <Dialog.Title
+                              className="text-base font-semibold"
+                              style={{ color: "var(--text)" }}
+                            >
+                              {title}
+                            </Dialog.Title>
+                          )}
+                          {description && (
+                            <Dialog.Description
+                              id="modal-description"
+                              className="text-sm"
+                              style={{ color: "var(--text-3)" }}
+                            >
+                              {description}
+                            </Dialog.Description>
+                          )}
+                        </div>
+                        <Dialog.Close asChild>
+                          <button
+                            className="flex-shrink-0 w-9 h-9 -mr-1.5 -mt-1.5 flex items-center justify-center rounded-lg cursor-pointer transition-colors"
                             style={{ color: "var(--text-3)" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--gray-100)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                            aria-label="Fechar"
                           >
-                            {description}
-                          </Dialog.Description>
-                        )}
+                            <X size={18} />
+                          </button>
+                        </Dialog.Close>
                       </div>
-                      <Dialog.Close asChild>
-                        <button
-                          className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer transition-colors"
-                          style={{ color: "var(--text-3)" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--gray-100)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                          aria-label="Fechar"
-                        >
-                          <X size={16} />
-                        </button>
-                      </Dialog.Close>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Body */}
-                  <div className="px-5 py-4">{children}</div>
+                    {/* Body */}
+                    <div className="px-5 py-4 overflow-y-auto overscroll-contain custom-scrollbar min-h-0 flex-1">{children}</div>
 
-                  {/* Footer */}
-                  {footer && (
-                    <div
-                      className="flex items-center justify-end gap-2 px-5 py-4 border-t"
-                      style={{ borderColor: "var(--border)" }}
-                    >
-                      {footer}
-                    </div>
-                  )}
-                </motion.div>
-              </Dialog.Content>
+                    {/* Footer — no telemóvel os botões dividem a largura (alvos grandes) */}
+                    {footer && (
+                      <div
+                        className="flex items-center justify-end gap-2 px-5 pt-4 border-t flex-shrink-0 [&>*]:flex-1 sm:[&>*]:flex-none [&>button]:min-h-11 sm:[&>button]:min-h-0 pb-[calc(1rem+var(--safe-bottom))] sm:pb-4"
+                        style={{ borderColor: "var(--border)" }}
+                      >
+                        {footer}
+                      </div>
+                    )}
+                  </motion.div>
+                </Dialog.Content>
+              </div>
             </>
           )}
         </AnimatePresence>

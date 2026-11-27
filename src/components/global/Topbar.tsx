@@ -2,7 +2,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/routes";
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, Menu } from "lucide-react";
+import { useUiStore } from "@/stores/uiStore";
 import { updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useNotificationStore } from "@/stores/notificationStore";
@@ -37,6 +38,7 @@ export function Topbar({ user, title }: TopbarProps) {
   } = useNotificationStore();
 
   const [notifOpen, setNotifOpen] = useState(false);
+  const abrirMenu = useUiStore((s) => s.abrirMenu);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -81,23 +83,42 @@ export function Topbar({ user, title }: TopbarProps) {
 
   return (
     <header
-      className="sticky top-0 z-20 flex items-center gap-3 px-5"
+      className="sticky top-0 z-20 flex items-center gap-2 sm:gap-3 px-3 sm:px-5"
       style={{
-        height: "var(--topbar-height)",
+        height: "calc(var(--topbar-height) + var(--safe-top))",
+        paddingTop: "var(--safe-top)",
         background: "rgba(255,255,255,.85)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         borderBottom: "1px solid var(--border)",
       }}
     >
+      {/* Telemóvel/tablet: menu + símbolo (no desktop estão na sidebar) */}
+      <button
+        type="button"
+        onClick={abrirMenu}
+        aria-label="Abrir menu"
+        className="lg:hidden flex items-center justify-center rounded-lg cursor-pointer flex-shrink-0"
+        style={{ width: 40, height: 40, color: "var(--heading)" }}
+      >
+        <Menu size={20} />
+      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/icons/icon-192.png"
+        alt=""
+        className="lg:hidden flex-shrink-0"
+        style={{ width: 28, height: 28, borderRadius: 8 }}
+      />
+
       {/* Título */}
-      <div className="flex-1 min-w-0 lg:ml-0 ml-10">
+      <div className="flex-1 min-w-0">
         {title ? (
           <h1 className="text-base font-semibold truncate" style={{ color: "var(--text)" }}>
             {title}
           </h1>
         ) : (
-          <p className="text-sm" style={{ color: "var(--text-2)" }}>
+          <p className="text-sm truncate" style={{ color: "var(--text-2)" }}>
             {greetingByHour()},{" "}
             <span style={{ color: "var(--text)" }} className="font-medium">
               {user?.nome?.split(" ")[0] ?? "Supervisor"}
@@ -111,9 +132,10 @@ export function Topbar({ user, title }: TopbarProps) {
         <div className="relative">
           <button
             onClick={() => setNotifOpen((o) => !o)}
-            className="relative flex items-center justify-center w-9 h-9 rounded-lg transition-colors cursor-pointer"
+            className="relative flex items-center justify-center w-10 h-10 rounded-lg transition-colors cursor-pointer"
             style={{ color: "var(--text-2)" }}
             aria-label={`${unreadCount} notificações`}
+            aria-expanded={notifOpen}
           >
             <Bell size={18} />
             {unreadCount > 0 && (
@@ -131,13 +153,18 @@ export function Topbar({ user, title }: TopbarProps) {
             <>
               <div className="fixed inset-0 z-10" onClick={() => setNotifOpen(false)} />
 
+              {/* Telemóvel: painel com a largura do ecrã, por baixo da topbar e acima da barra inferior */}
               <div
-                className="absolute right-0 top-11 w-96 rounded-xl z-20 overflow-hidden flex flex-col"
+                className={cn(
+                  "fixed inset-x-2 top-[calc(var(--topbar-height)+var(--safe-top)+6px)] rounded-xl z-20 overflow-hidden flex flex-col",
+                  "sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96"
+                )}
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   boxShadow: "var(--shadow-lg)",
-                  maxHeight: "min(520px, calc(100vh - 80px))",
+                  maxHeight:
+                    "min(520px, calc(100dvh - var(--topbar-height) - var(--safe-top) - var(--bottomnav-h) - var(--safe-bottom) - 20px))",
                 }}
               >
                 {/* Header */}
@@ -162,7 +189,7 @@ export function Topbar({ user, title }: TopbarProps) {
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllAsRead}
-                      className="flex items-center gap-1 text-xs cursor-pointer transition-colors"
+                      className="flex items-center gap-1 text-xs cursor-pointer transition-colors min-h-10 -my-2 px-1"
                       style={{ color: "var(--blue)" }}
                       title="Marcar todas como lidas"
                     >

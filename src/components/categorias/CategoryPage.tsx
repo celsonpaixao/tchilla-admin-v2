@@ -312,7 +312,7 @@ export function CategoryPage({ initialCategorias, slugOptions }: CategoryPagePro
               <div className="flex items-center gap-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); openEditCat(cat); }}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer"
                   style={{ color: "var(--text-3)" }}
                   aria-label="Editar categoria"
                 >
@@ -320,7 +320,7 @@ export function CategoryPage({ initialCategorias, slugOptions }: CategoryPagePro
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteTarget(cat); }}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg cursor-pointer"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg cursor-pointer"
                   style={{ color: "var(--danger-fg)" }}
                   aria-label="Remover categoria"
                 >
@@ -394,7 +394,7 @@ export function CategoryPage({ initialCategorias, slugOptions }: CategoryPagePro
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => openEditSub(sub, cat)}
-                            className="w-6 h-6 flex items-center justify-center rounded cursor-pointer"
+                            className="w-8 h-8 flex items-center justify-center rounded-md cursor-pointer"
                             style={{ color: "var(--text-3)" }}
                             aria-label="Editar subcategoria"
                           >
@@ -402,7 +402,7 @@ export function CategoryPage({ initialCategorias, slugOptions }: CategoryPagePro
                           </button>
                           <button
                             onClick={() => setDeleteSub(sub)}
-                            className="w-6 h-6 flex items-center justify-center rounded cursor-pointer"
+                            className="w-8 h-8 flex items-center justify-center rounded-md cursor-pointer"
                             style={{ color: "var(--danger-fg)" }}
                             aria-label="Remover subcategoria"
                           >

@@ -139,7 +139,7 @@ export function UsuarioDetalhePage({ atividade, papel, eu }: UsuarioDetalhePageP
         </div>
       )}
 
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 xl:grid-cols-3">
         <KPICard label={`Reservas · ${a.reservasPagas.quantidade} pagas`} value={a.reservasTotal.quantidade} icon={<CalendarCheck size={16} />} />
         <KPICard label="Valor pago em reservas" value={pago.valor} suffix={pago.sufixo} icon={<Wallet size={16} />} />
         <KPICard label="Avaliações feitas" value={a.avaliacoes} icon={<Star size={16} />} />

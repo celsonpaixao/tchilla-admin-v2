@@ -175,15 +175,51 @@
   --r-xl:   calc(var(--radius-base) * 2.25);
 }
 
+/* Ecrãs táteis (telemóvel/tablet): alvos ≥ 40px (Regras UI/UX §07) em vez da densidade compacta */
+@media (pointer: coarse) {
+  :root, [data-density="comfy"] {
+    --row-h: 44px; --control-h: 40px; --control-h-sm: 36px; --control-h-lg: 48px;
+    --pad-x: 12px; --gap: 10px;
+  }
+}
+
 /* ─── Layout responsivo ─────────────────────────────────── */
-/* Sidebar só existe no desktop (lg+); no mobile o conteúdo ocupa a largura total */
+/* Abaixo de lg (telemóvel e tablet) a sidebar dá lugar à barra inferior + menu lateral */
+:root {
+  --bottomnav-h: 60px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
 .content-area {
-  padding-left: 0;
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+  /* espaço para a barra inferior fixa */
+  padding-bottom: calc(var(--bottomnav-h) + var(--safe-bottom));
 }
 @media (min-width: 1024px) {
   .content-area {
     padding-left: var(--sidebar-width);
+    padding-right: 0;
+    padding-bottom: 0;
   }
+}
+
+/* O iOS faz zoom ao focar campos com letra < 16px — incómodo numa PWA */
+@media (pointer: coarse) and (max-width: 1023px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Toque: sem o flash cinzento do WebKit e sem atraso de duplo toque */
+a, button, [role="button"], [role="tab"], summary, label {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* ─── Propagação global de densidade ─────────────────────── */
@@ -319,6 +355,38 @@ textarea {
     padding: 9px 16px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
+  }
+
+  /* Rótulo nos cartões da tabela (telemóvel) — mesmo tom do cabeçalho da tabela.
+     Os headers trazem "text-right"/"w-full" para a tabela; no cartão o rótulo fica à esquerda. */
+  .tbl-card-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    max-width: 45%;
+  }
+  .tbl-card-label * {
+    text-align: left !important;
+    width: auto !important;
+    display: inline !important;
+  }
+  /* Ações dos cartões: alvos de toque confortáveis */
+  .tbl-card-acoes button,
+  .tbl-card-acoes a {
+    min-height: 36px;
+  }
+
+  /* KPI — no telemóvel ficam 2 por linha, por isso mais compactos */
+  .kpi-card { padding: 16px 17px; }
+  .kpi-valor { font-size: 27px; margin-top: 11px; overflow-wrap: anywhere; }
+  .kpi-valor small { font-size: 14px; }
+  @media (max-width: 639px) {
+    .kpi-card { padding: 12px 13px; }
+    .kpi-valor { font-size: 21px; margin-top: 8px; }
+    .kpi-valor small { font-size: 12px; }
   }
 
   /* KPI delta colors */

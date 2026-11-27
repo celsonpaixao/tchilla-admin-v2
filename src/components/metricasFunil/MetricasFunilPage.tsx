@@ -87,7 +87,7 @@ function Conteudo({ m }: { m: MetricasFunil }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPICard label="Conversão no Planear" value={pct(planear?.conversao ?? null)} icon={<Percent size={16} />} accent />
         <KPICard label="Conversão no Orçamento" value={pct(orcamento?.conversao ?? null)} icon={<Percent size={16} />} />
         <KPICard label={`Reservas (${formatCurrencyAOA(valor)})`} value={num(reservas)} icon={<Receipt size={16} />} />

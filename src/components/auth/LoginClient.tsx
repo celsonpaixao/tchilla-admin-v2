@@ -67,7 +67,7 @@ export function LoginClient() {
 
         <div className="relative z-10">
           <Image
-            src="/assets/vectores/tchilla-logotipo-branco.svg"
+            src="/assets/tchilla-logotipo-branco.png"
             alt="Tchilla Admin"
             width={140}
             height={40}
@@ -121,7 +121,7 @@ export function LoginClient() {
         <div className="w-full max-w-sm space-y-8">
           <div className="lg:hidden mb-8">
             <Image
-              src="/assets/vectores/tchilla-logotipo-marinho.svg"
+              src="/assets/tchilla-logotipo-marinho.png"
               alt="Tchilla Admin"
               width={120}
               height={34}
@@ -234,8 +234,10 @@ export function LoginClient() {
             <button
               type="submit"
               disabled={isPending || !email || !password}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full min-h-11 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               style={{
+                // texto marinho sobre o azul: o branco não passa no contraste AA (Regras UI/UX §07)
+                color: "var(--primary-fg)",
                 background: isPending ? "var(--primary-press)" : "var(--blue)",
               }}
               onMouseEnter={(e) => {
