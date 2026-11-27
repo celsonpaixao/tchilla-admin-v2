@@ -14,6 +14,7 @@ import { PageShell } from "@/components/global/PageShell";
 import type { ActionResult } from "@/types/common.types";
 import type { ConfiguracoesPlataforma } from "@/types/admin.types";
 import { TaxasPlataforma } from "./TaxasPlataforma";
+import { PushDiagnostico } from "./PushDiagnostico";
 
 interface ConfiguracoesPageProps {
   user: UsuarioInterface | null;
@@ -240,6 +241,9 @@ export function ConfiguracoesPage({ user, configuracoes, papel }: ConfiguracoesP
               ))}
             </div>
           </div>
+
+          {/* Push neste dispositivo — diagnóstico do fcm_token */}
+          <PushDiagnostico user={user} />
 
           {/* Sobre o sistema */}
           <div

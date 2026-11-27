@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth/session";
 import { AppSidebar } from "@/components/global/AppSidebar";
 import { Topbar } from "@/components/global/Topbar";
 import { MobileTabBar } from "@/components/global/MobileTabBar";
+import { PushAtivarAviso } from "@/components/global/PushAtivarAviso";
 import { ROUTES } from "@/constants/routes";
 import { DashboardProviders } from "./providers";
 
@@ -37,6 +38,7 @@ export default async function DashboardLayout({
         </a>
 
         <div id="main-content" className="flex-1 p-4 sm:p-5 lg:p-6">
+          <PushAtivarAviso />
           {children}
         </div>
       </main>

@@ -34,11 +34,8 @@ export function LoginClient() {
           return;
         }
 
-        if (typeof window !== "undefined" && "Notification" in window) {
-          if (Notification.permission === "default") {
-            await Notification.requestPermission();
-          }
-        }
+        // A permissão de notificações é pedida no painel (PushAtivarAviso), num toque do
+        // utilizador: aqui, depois de vários await, o iPhone ignorava o pedido.
 
         toast.success("Bem-vindo de volta!");
         router.push(ROUTES.HOME);
